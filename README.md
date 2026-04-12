@@ -3,8 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>GOV SYSTEM v6 ULTIMATE</title>
+<title>US Department of Labor</title>
 
 <style>
 body{
@@ -19,6 +18,7 @@ background:#111827;
 padding:20px;
 text-align:center;
 font-size:24px;
+font-weight:bold;
 }
 
 .container{
@@ -35,7 +35,7 @@ border-radius:10px;
 border:1px solid #1f2937;
 }
 
-input,textarea,select,button{
+input,textarea,button{
 width:100%;
 padding:10px;
 margin-top:8px;
@@ -57,228 +57,139 @@ background:#0a1a0f;
 padding:10px;
 margin-top:10px;
 }
-
-small{color:#9ca3af}
-
-.tabs{
-display:flex;
-gap:10px;
-margin-bottom:15px;
-}
-
-.tab{
-flex:1;
-padding:10px;
-text-align:center;
-background:#111827;
-cursor:pointer;
-}
-
-.active{background:#2563eb}
 </style>
-
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
 
 </head>
 
 <body>
 
-<header>GOV SYSTEM v6 ULTIMATE</header>
+<header>US Department of Labor</header>
 
 <div class="container">
 
-<!-- TABS -->
-<div class="tabs">
-<div class="tab active" onclick="showTab('public')">🌐 Публичные отчёты</div>
-<div class="tab" onclick="showTab('admin')">🔐 Админ</div>
-</div>
-
 <!-- PUBLIC -->
-<div id="public">
-
-<h3>📢 Открытые отчёты</h3>
-<div id="publicReports"></div>
-
+<div class="card">
+<h3>📢 Публичные отчёты</h3>
+<div id="public"></div>
 </div>
 
-<!-- ADMIN -->
-<div id="admin" class="hidden">
-
+<!-- LOGIN -->
 <div class="card">
+<h3>🔐 Админ вход</h3>
 
-<h3>Вход</h3>
-
-<input id="email" placeholder="Email">
-<input id="password" type="password" placeholder="Пароль">
-
-<select id="role">
-<option>viewer</option>
-<option>deputy</option>
-<option>minister</option>
-<option>admin</option>
-</select>
+<input id="email" placeholder="email">
+<input id="pass" type="password" placeholder="password">
 
 <button onclick="login()">Войти</button>
-
 </div>
 
+<!-- ADMIN PANEL -->
 <div class="card hidden" id="panel">
 
-<h3>➕ Создать отчет (ПУБЛИЧНЫЙ)</h3>
+<h3>➕ Создать отчёт</h3>
 
 <input id="title" placeholder="Название">
 <textarea id="text" placeholder="Текст"></textarea>
 
-<button onclick="addReport()">Опубликовать</button>
-
-</div>
-
-<h3>📊 Все отчёты</h3>
-<div id="allReports"></div>
+<button onclick="addReport()">Добавить</button>
 
 </div>
 
 </div>
 
-<script>
+<script type="module">
 
-// FIREBASE CONFIG (ВСТАВЬ СВОЙ)
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { 
+getAuth,
+signInWithEmailAndPassword 
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+import {
+getFirestore,
+collection,
+addDoc,
+onSnapshot,
+query,
+orderBy
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+// 🔥 ВСТАВЬ СВОЙ CONFIG С FIREBASE
 const firebaseConfig = {
- apiKey:"YOUR_KEY",
- authDomain:"YOUR_DOMAIN",
- projectId:"YOUR_ID",
- storageBucket:"YOUR_BUCKET",
- messagingSenderId:"YOUR_ID",
- appId:"YOUR_APP"
+apiKey: "YOUR_KEY",
+authDomain: "YOUR_DOMAIN",
+projectId: "YOUR_ID",
+storageBucket: "YOUR_BUCKET",
+messagingSenderId: "YOUR_ID",
+appId: "YOUR_APP"
 };
 
-firebase.initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-const auth=firebase.auth();
-const db=firebase.firestore();
+// LOGIN (ИСПРАВЛЕНО)
+window.login = async function(){
 
-// TABS
-function showTab(tab){
+let email = document.getElementById("email").value;
+let pass = document.getElementById("pass").value;
 
-document.getElementById("public").classList.add("hidden");
-document.getElementById("admin").classList.add("hidden");
+try{
+await signInWithEmailAndPassword(auth,email,pass);
 
-document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
-
-if(tab==="public"){
-document.getElementById("public").classList.remove("hidden");
-document.querySelectorAll(".tab")[0].classList.add("active");
-loadPublic();
-}
-
-if(tab==="admin"){
-document.getElementById("admin").classList.remove("hidden");
-document.querySelectorAll(".tab")[1].classList.add("active");
-}
-
-}
-
-// LOGIN
-function login(){
-
-let e=document.getElementById("email").value;
-let p=document.getElementById("password").value;
-let r=document.getElementById("role").value;
-
-auth.signInWithEmailAndPassword(e,p)
-.then(()=>{
 document.getElementById("panel").classList.remove("hidden");
-loadAll();
-log("login:"+r);
-})
-.catch(()=>alert("Ошибка входа"));
+
+alert("Вход выполнен");
+loadReports();
+
+}catch(e){
+alert("Ошибка входа");
+}
 
 }
 
-// ADD REPORT (PUBLIC)
-function addReport(){
+// ADD REPORT
+window.addReport = async function(){
 
-db.collection("reports").add({
+await addDoc(collection(db,"reports"),{
 title:document.getElementById("title").value,
 text:document.getElementById("text").value,
-time:new Date().toISOString(),
-public:true
+time:new Date()
 });
 
-log("add_public_report");
+loadReports();
 
 }
 
-// LOAD PUBLIC
-function loadPublic(){
+// LOAD REPORTS
+function loadReports(){
 
-db.collection("reports").onSnapshot(snap=>{
+const q = query(collection(db,"reports"));
+
+onSnapshot(q,(snap)=>{
 
 let html="";
 
 snap.forEach(doc=>{
-let d=doc.data();
 
-if(d.public){
+let d=doc.data();
 
 html+=`
 <div class="public">
 <b>${d.title}</b><br>
-${d.text}<br>
-<small>${d.time}</small>
-</div>
-`;
-
-}
-
-});
-
-document.getElementById("publicReports").innerHTML=html;
-
-});
-
-}
-
-// LOAD ALL (ADMIN)
-function loadAll(){
-
-db.collection("reports").onSnapshot(snap=>{
-
-let html="";
-
-snap.forEach(doc=>{
-let d=doc.data();
-
-html+=`
-<div class="card">
-<b>${d.title}</b><br>
-${d.text}<br>
-<small>${d.time}</small>
+${d.text}
 </div>
 `;
 
 });
 
-document.getElementById("allReports").innerHTML=html;
+document.getElementById("public").innerHTML=html;
 
 });
 
 }
 
-// LOG
-function log(a){
-
-db.collection("logs").add({
-action:a,
-time:new Date().toISOString()
-});
-
-}
-
-// AUTO LOAD PUBLIC
-loadPublic();
+loadReports();
 
 </script>
 
