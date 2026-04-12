@@ -5,10 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>U.S. Department of Labor | Official Portal</title>
     
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-
     <style>
         :root {
             --primary: #002e6d;
@@ -20,7 +16,7 @@
 
         body { font-family: 'Georgia', serif; margin: 0; background-color: #f0f0f0; color: var(--text); }
         
-        /* Шапка в стиле первого варианта */
+        /* Шапка */
         header { background: var(--primary); color: white; padding: 25px 0; border-bottom: 4px solid var(--accent); }
         .container { max-width: 1000px; margin: 0 auto; padding: 0 20px; }
         .header-flex { display: flex; align-items: center; justify-content: space-between; }
@@ -35,7 +31,7 @@
         .login-trigger { background: transparent; border: 1px solid white; color: white; padding: 5px 15px; cursor: pointer; border-radius: 2px; transition: 0.3s; }
         .login-trigger:hover { background: white; color: var(--secondary); }
 
-        /* Контент отчета (Главная страница) */
+        /* Контент отчета */
         main { padding: 40px 0; }
         .report-paper { background: white; padding: 60px; box-shadow: 0 0 15px rgba(0,0,0,0.1); border: 1px solid var(--border); position: relative; }
         
@@ -46,7 +42,7 @@
 
         .data-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
         .data-table td { padding: 12px; border-bottom: 1px solid #eee; }
-        .data-table .label { font-weight: bold; width: 40%; color: #555; }
+        .data-table .label { font-weight: bold; width: 45%; color: #555; }
         .badge { background: var(--primary); color: white; padding: 3px 8px; border-radius: 3px; font-size: 12px; font-family: sans-serif; }
 
         /* Окно входа */
@@ -56,10 +52,11 @@
         .login-box input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; box-sizing: border-box; }
         .btn-auth { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; cursor: pointer; font-weight: bold; }
 
-        /* Кнопка редактирования (только для админа) */
-        #admin-panel { display: none; background: #fff3cd; padding: 15px; border: 1px solid #ffeeba; margin-bottom: 20px; text-align: center; }
+        /* Системная панель после входа */
+        #system-panel { display: none; background: #fff3cd; padding: 15px; border: 1px solid #ffeeba; margin-bottom: 20px; text-align: center; font-family: sans-serif; }
+        .edit-btn { background: var(--accent); color: white; border: none; padding: 5px 15px; cursor: pointer; border-radius: 3px; font-weight: bold; margin-left: 10px; }
 
-        footer { text-align: center; padding: 40px; color: #777; font-size: 12px; border-top: 1px solid #ddd; margin-top: 50px; }
+        footer { text-align: center; padding: 40px; color: #777; font-size: 12px; border-top: 1px solid #ddd; margin-top: 50px; font-family: sans-serif; }
     </style>
 </head>
 <body>
@@ -88,20 +85,21 @@
 </nav>
 
 <main class="container">
-    <div id="admin-panel">
-        <strong>Панель Министра активирована.</strong> Вы можете внести правки в текущий отчет. 
-        <button onclick="alert('Открыт режим редактирования...')">Редактировать текст</button>
+    <div id="system-panel">
+        <span id="user-info">Панель активирована.</span> 
+        <button class="edit-btn" id="edit-mode-btn" style="display:none;" onclick="alert('Режим редактирования базы данных открыт.')">РЕДАКТИРОВАТЬ ОТЧЕТ</button>
     </div>
 
     <div class="report-paper" id="main-report">
         <img src="https://i.ibb.co/VWVm0Qz/dol-logo.png" class="official-seal">
         
-        <p style="text-align: right; font-style: italic;">Экземпляр №1<br>Дата: 12.05.2026</p>
+        <p style="text-align: right; font-style: italic;">Экземпляр №1<br>Дата формирования: 12.05.2026</p>
         
         <div style="text-align: center; margin-bottom: 50px;">
             <h2 style="border: none;">Еженедельный отчет Министерства Труда</h2>
             <p>Период: <b>05.04.2026 — 12.05.2026</b></p>
             <p>Получатель: <b>Губернатор Anna Moroz</b></p>
+            <p>Подающий: <b>Министр Труда Artur Drovic</b></p>
         </div>
 
         <h3>1. Кадровый аудит</h3>
@@ -118,22 +116,31 @@
             <tr><td class="label">Выдано лицензий (Всего):</td><td><b>315</b></td></tr>
             <tr><td class="label">Лицензии на оружие:</td><td>239</td></tr>
             <tr><td class="label">Охота / Рыбалка:</td><td>33 / 33</td></tr>
-            <tr><td class="label">Проведено собеседований:</td><td>6 (Принято: 47)</td></tr>
+            <tr><td class="label">Проведено собеседований:</td><td>6</td></tr>
+            <tr><td class="label">Принято на стажировку:</td><td>24 (Открытые) / 23 (Закрытые)</td></tr>
             <tr><td class="label">Экзамены / Лекции:</td><td>40 / 33</td></tr>
+            <tr><td class="label">Произведено переводов:</td><td>6</td></tr>
         </table>
-        <p><b>Премирование Аппарата:</b> Mops Sergeyevich (60%), Jamess Soprano (40%)</p>
+        <p><b>Премирование Аппарата:</b> Глава Mops Sergeyevich (60%), Зам. Главы Jamess Soprano (40%)</p>
 
         <h3>3. Департамент Здравоохранения</h3>
+        <p>Кадровый состав: 7 сотрудников</p>
         <table class="data-table">
             <tr><td class="label">Надзорные мероприятия:</td><td>22</td></tr>
-            <tr><td class="label">Медицинские проверки:</td><td>4</td></tr>
-            <tr><td class="label">Сумма вознаграждений:</td><td>101.000$</td></tr>
-            <tr><td class="label">Общая сумма штрафов:</td><td>280.000$</td></tr>
+            <tr><td class="label">Присутствие на мед. проверках:</td><td>4</td></tr>
+            <tr><td class="label">Собеседования в EMS:</td><td>6</td></tr>
+            <tr><td class="label">Выявлено нарушений сотрудников EMS:</td><td><b>0</b></td></tr>
+            <tr><td class="label">Благотворительные акции:</td><td>3</td></tr>
+            <tr><td class="label">Сумма вознаграждений за акции:</td><td><span style="color: green; font-weight: bold;">101.000$</span></td></tr>
+            <tr><td class="label">Общая сумма штрафов:</td><td><span style="color: var(--accent); font-weight: bold;">280.000$</span></td></tr>
         </table>
-        <p><b>Премирование:</b> Dia Dema (50%), Dis Morales (40%), Luigi Cudi (10%)</p>
+        <p><b>Премирование:</b> Директор Dia Dema (50%), Зам. Директора Dis Morales (40%), Зам. Директора Luigi Cudi (10%)</p>
 
         <div style="margin-top: 50px; border-top: 1px solid #eee; padding-top: 20px;">
-            <p>Подпись ответственного лица: ____________________ / Artur Drovic /</p>
+            <p>Прикрепленные документы:<br>
+            📄 Еженедельный отчет Главы Аппарата Правительства от 05.04.26<br>
+            📄 Еженедельный отчет Инспектора Департамента Здравоохранения от 05.04.26</p>
+            <p style="margin-top: 30px;">Подпись: ____________________ / A. Drovic /</p>
         </div>
     </div>
 </main>
@@ -156,34 +163,43 @@
 </footer>
 
 <script>
-    // --- FIREBASE CONFIG ---
-    const firebaseConfig = {
-        apiKey: "YOUR_API_KEY",
-        authDomain: "YOUR_PROJECT.firebaseapp.com",
-        projectId: "YOUR_PROJECT",
-        appId: "YOUR_APP_ID"
+    // Встроенная база пользователей (для моментальной работы)
+    const systemUsers = {
+        "minister@labor.gov.us": { pass: "Admin2026", role: "Министр", name: "Artur Drovic", canEdit: true },
+        "deputy1@labor.gov.us": { pass: "Dep2026", role: "Заместитель", name: "Miy Li", canEdit: false },
+        "deputy2@labor.gov.us": { pass: "Dep2026", role: "Заместитель", name: "Elmer Moroz", canEdit: false }
     };
-    firebase.initializeApp(firebaseConfig);
+
+    let currentUser = null;
 
     function toggleModal(show) {
         document.getElementById('loginModal').style.display = show ? 'flex' : 'none';
     }
 
     function handleLogin() {
-        const email = document.getElementById('email').value;
-        const pass = document.getElementById('password').value;
+        const email = document.getElementById('email').value.trim();
+        const pass = document.getElementById('password').value.trim();
         
-        // Логика авторизации
-        firebase.auth().signInWithEmailAndPassword(email, pass)
-            .then((userCredential) => {
-                document.getElementById('admin-panel').style.display = 'block';
-                document.getElementById('loginBtn').innerText = 'ВЫЙТИ';
-                toggleModal(false);
-                alert('Добро пожаловать, господин Министр.');
-            })
-            .catch((error) => {
-                alert('Ошибка доступа: Неверные учетные данные подразделения .gov');
-            });
+        if (systemUsers[email] && systemUsers[email].pass === pass) {
+            currentUser = systemUsers[email];
+            
+            // Настройка панели после успешного входа
+            document.getElementById('system-panel').style.display = 'block';
+            document.getElementById('user-info').innerHTML = `Авторизация: <b>${currentUser.role} ${currentUser.name}</b>.`;
+            document.getElementById('loginBtn').innerText = 'ВЫЙТИ';
+            
+            // Если это Министр, показываем кнопку редактирования
+            if (currentUser.canEdit) {
+                document.getElementById('edit-mode-btn').style.display = 'inline-block';
+            } else {
+                document.getElementById('edit-mode-btn').style.display = 'none';
+            }
+
+            toggleModal(false);
+            alert(`Доступ разрешен. Добро пожаловать, ${currentUser.name}.`);
+        } else {
+            alert('Ошибка доступа: Неверный логин или пароль .gov');
+        }
     }
 </script>
 
