@@ -3,204 +3,238 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>U.S. Department of Labor | Official Portal</title>
-    
+    <title>U.S. Department of Labor | System Portal</title>
     <style>
         :root {
             --primary: #002e6d;
             --secondary: #205493;
             --accent: #cd2026;
-            --text: #323a45;
-            --border: #d6d7d9;
+            --bg: #f4f4f4;
+            --white: #ffffff;
         }
 
-        body { font-family: 'Georgia', serif; margin: 0; background-color: #f0f0f0; color: var(--text); }
+        body { font-family: 'Georgia', serif; margin: 0; background: var(--bg); color: #333; }
         
-        /* Шапка */
-        header { background: var(--primary); color: white; padding: 25px 0; border-bottom: 4px solid var(--accent); }
+        header { background: var(--primary); color: white; padding: 20px 0; border-bottom: 4px solid var(--accent); }
         .container { max-width: 1000px; margin: 0 auto; padding: 0 20px; }
-        .header-flex { display: flex; align-items: center; justify-content: space-between; }
-        .logo-area { display: flex; align-items: center; gap: 20px; }
-        .logo-area img { width: 85px; filter: brightness(0) invert(1); }
         
-        /* Навигация */
-        nav { background: var(--secondary); padding: 12px 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .nav-flex { display: flex; justify-content: space-between; align-items: center; }
-        .nav-links a { color: white; text-decoration: none; font-weight: bold; font-size: 13px; margin-right: 25px; font-family: sans-serif; }
+        .header-content { display: flex; align-items: center; gap: 20px; }
+        .logo-img { width: 80px; height: 80px; background: white; border-radius: 50%; padding: 5px; }
         
-        .login-trigger { background: transparent; border: 1px solid white; color: white; padding: 5px 15px; cursor: pointer; border-radius: 2px; transition: 0.3s; }
-        .login-trigger:hover { background: white; color: var(--secondary); }
+        .meta-info { margin-top: 10px; font-size: 13px; font-style: italic; color: #555; }
 
-        /* Контент отчета */
-        main { padding: 40px 0; }
-        .report-paper { background: white; padding: 60px; box-shadow: 0 0 15px rgba(0,0,0,0.1); border: 1px solid var(--border); position: relative; }
+        nav { background: var(--secondary); padding: 10px 0; }
+        .nav-flex { display: flex; justify-content: space-between; }
+        nav a, .admin-link { color: white; text-decoration: none; font-weight: bold; font-family: sans-serif; font-size: 14px; cursor: pointer; }
+
+        .report-paper { background: var(--white); padding: 50px; margin: 30px 0; box-shadow: 0 0 20px rgba(0,0,0,0.1); border: 1px solid #ddd; }
         
-        .official-seal { position: absolute; top: 40px; right: 60px; width: 120px; opacity: 0.15; pointer-events: none; }
+        h2 { border-bottom: 2px solid var(--primary); padding-bottom: 10px; color: var(--primary); text-transform: uppercase; text-align: center; }
+        h3 { background: #eef2f7; padding: 12px; border-left: 6px solid var(--primary); margin-top: 40px; }
+
+        table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+        table td { padding: 12px; border-bottom: 1px solid #eee; }
+        .label { font-weight: bold; width: 50%; }
+        .badge { background: var(--primary); color: white; padding: 4px 10px; border-radius: 4px; font-family: sans-serif; font-size: 13px; }
+
+        /* Форма редактирования */
+        #editor-section { display: none; background: #fff; padding: 30px; border: 2px solid var(--primary); margin: 20px 0; }
+        input, textarea { width: 100%; padding: 10px; margin: 5px 0 15px; border: 1px solid #ccc; box-sizing: border-box; }
+        .btn-save { background: #27ae60; color: white; border: none; padding: 15px; width: 100%; font-weight: bold; cursor: pointer; }
         
-        h2 { border-bottom: 2px solid var(--primary); padding-bottom: 10px; color: var(--primary); text-transform: uppercase; font-size: 22px; }
-        h3 { background: #f4f4f4; padding: 10px; border-left: 5px solid var(--primary); font-size: 18px; margin-top: 30px; }
+        /* Архив */
+        #archive-list { display: none; }
+        .archive-item { background: white; padding: 15px; margin-bottom: 10px; border-left: 5px solid var(--secondary); cursor: pointer; }
+        .archive-item:hover { background: #f9f9f9; }
 
-        .data-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-        .data-table td { padding: 12px; border-bottom: 1px solid #eee; }
-        .data-table .label { font-weight: bold; width: 45%; color: #555; }
-        .badge { background: var(--primary); color: white; padding: 3px 8px; border-radius: 3px; font-size: 12px; font-family: sans-serif; }
-
-        /* Окно входа */
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; align-items: center; justify-content: center; }
-        .login-box { background: white; width: 350px; padding: 30px; border-top: 6px solid var(--primary); position: relative; }
-        .login-box h4 { margin: 0 0 20px 0; color: var(--primary); text-align: center; font-family: sans-serif; }
-        .login-box input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; box-sizing: border-box; }
-        .btn-auth { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; cursor: pointer; font-weight: bold; }
-
-        /* Системная панель после входа */
-        #system-panel { display: none; background: #fff3cd; padding: 15px; border: 1px solid #ffeeba; margin-bottom: 20px; text-align: center; font-family: sans-serif; }
-        .edit-btn { background: var(--accent); color: white; border: none; padding: 5px 15px; cursor: pointer; border-radius: 3px; font-weight: bold; margin-left: 10px; }
-
-        footer { text-align: center; padding: 40px; color: #777; font-size: 12px; border-top: 1px solid #ddd; margin-top: 50px; font-family: sans-serif; }
+        .doc-link { color: #2980b9; text-decoration: underline; font-weight: bold; }
+        
+        #auth-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 30px; box-shadow: 0 0 50px rgba(0,0,0,0.5); z-index: 100; border-top: 5px solid var(--primary); }
+        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 99; }
     </style>
 </head>
 <body>
 
 <header>
-    <div class="container header-flex">
-        <div class="logo-area">
-            <img src="https://i.ibb.co/VWVm0Qz/dol-logo.png" alt="Seal">
-            <div>
-                <h1 style="margin:0; font-size: 26px; letter-spacing: 1px;">UNITED STATES DEPARTMENT OF LABOR</h1>
-                <p style="margin:5px 0 0 0; opacity: 0.8; font-family: sans-serif; font-size: 12px;">OFFICIAL REPORTING SYSTEM | EST. 1913</p>
-            </div>
+    <div class="container header-content">
+        <div class="logo-img">
+            <img src="https://i.ibb.co/VWVm0Qz/dol-logo.png" alt="DOL" style="width:100%;" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/d/da/Seal_of_the_United_States_Department_of_Labor.svg'">
+        </div>
+        <div>
+            <h1 style="margin:0; font-size: 28px;">UNITED STATES DEPARTMENT OF LABOR</h1>
+            <p style="margin:0; opacity: 0.8;">OFFICIAL SECRETARY OF LABOR PORTAL</p>
         </div>
     </div>
 </header>
 
 <nav>
     <div class="container nav-flex">
-        <div class="nav-links">
-            <a href="#">ГЛАВНАЯ</a>
-            <a href="#">ПУБЛИЧНЫЙ АРХИВ</a>
-            <a href="#">ДЕПАРТАМЕНТЫ</a>
+        <div>
+            <a onclick="showSection('main')">ГЛАВНАЯ</a> | 
+            <a onclick="showSection('archive')">АРХИВ</a>
         </div>
-        <button class="login-trigger" id="loginBtn" onclick="toggleModal(true)">ВХОД В СИСТЕМУ</button>
+        <a class="admin-link" onclick="openLogin()">ВХОД В СИСТЕМУ</a>
     </div>
 </nav>
 
-<main class="container">
-    <div id="system-panel">
-        <span id="user-info">Панель активирована.</span> 
-        <button class="edit-btn" id="edit-mode-btn" style="display:none;" onclick="alert('Режим редактирования базы данных открыт.')">РЕДАКТИРОВАТЬ ОТЧЕТ</button>
+<div class="container">
+    <div id="meta-container" class="meta-info"></div>
+
+    <div id="editor-section">
+        <h3>СОЗДАТЬ НОВЫЙ ЕЖЕНЕДЕЛЬНЫЙ ОТЧЕТ</h3>
+        <label>Дата и Номер экземпляра:</label>
+        <input type="text" id="edit-meta" placeholder="Пример: Экземпляр №1 | Дата: 12.05.2026">
+        
+        <label>Период отчета:</label>
+        <input type="text" id="edit-period" placeholder="05.04.2026 — 12.05.2026">
+
+        <label>Кадровый аудит Министра (HTML):</label>
+        <textarea id="edit-audit-min" rows="3"></textarea>
+
+        <label>Данные Аппарата (Лицензии, собесы и т.д.):</label>
+        <textarea id="edit-app" rows="4"></textarea>
+
+        <label>Данные Здравоохранения (Штрафы, проверки):</label>
+        <textarea id="edit-zdrav" rows="4"></textarea>
+
+        <label>Ссылки на документы (Название|Ссылка, каждая с новой строки):</label>
+        <textarea id="edit-docs" rows="3" placeholder="Название отчета|https://google.com"></textarea>
+
+        <button class="btn-save" onclick="saveNewReport()">ОПУБЛИКОВАТЬ ОТЧЕТ</button>
     </div>
 
-    <div class="report-paper" id="main-report">
-        <img src="https://i.ibb.co/VWVm0Qz/dol-logo.png" class="official-seal">
-        
-        <p style="text-align: right; font-style: italic;">Экземпляр №1<br>Дата формирования: 12.05.2026</p>
-        
-        <div style="text-align: center; margin-bottom: 50px;">
-            <h2 style="border: none;">Еженедельный отчет Министерства Труда</h2>
-            <p>Период: <b>05.04.2026 — 12.05.2026</b></p>
-            <p>Получатель: <b>Губернатор Anna Moroz</b></p>
-            <p>Подающий: <b>Министр Труда Artur Drovic</b></p>
-        </div>
-
-        <h3>1. Кадровый аудит</h3>
-        <table class="data-table">
-            <tr><td class="label">Общий штат Министерства:</td><td>26 сотрудников</td></tr>
-            <tr><td class="label">Министр Труда:</td><td>Artur Drovic <span class="badge">34%</span></td></tr>
-            <tr><td class="label">Зам. Министра:</td><td>Miy Li <span class="badge">33%</span></td></tr>
-            <tr><td class="label">Зам. Министра:</td><td>Elmer Moroz <span class="badge">33%</span></td></tr>
-        </table>
-
-        <h3>2. Деятельность Аппарата Правительства</h3>
-        <p>Кадровый состав: 16 сотрудников</p>
-        <table class="data-table">
-            <tr><td class="label">Выдано лицензий (Всего):</td><td><b>315</b></td></tr>
-            <tr><td class="label">Лицензии на оружие:</td><td>239</td></tr>
-            <tr><td class="label">Охота / Рыбалка:</td><td>33 / 33</td></tr>
-            <tr><td class="label">Проведено собеседований:</td><td>6</td></tr>
-            <tr><td class="label">Принято на стажировку:</td><td>24 (Открытые) / 23 (Закрытые)</td></tr>
-            <tr><td class="label">Экзамены / Лекции:</td><td>40 / 33</td></tr>
-            <tr><td class="label">Произведено переводов:</td><td>6</td></tr>
-        </table>
-        <p><b>Премирование Аппарата:</b> Глава Mops Sergeyevich (60%), Зам. Главы Jamess Soprano (40%)</p>
-
-        <h3>3. Департамент Здравоохранения</h3>
-        <p>Кадровый состав: 7 сотрудников</p>
-        <table class="data-table">
-            <tr><td class="label">Надзорные мероприятия:</td><td>22</td></tr>
-            <tr><td class="label">Присутствие на мед. проверках:</td><td>4</td></tr>
-            <tr><td class="label">Собеседования в EMS:</td><td>6</td></tr>
-            <tr><td class="label">Выявлено нарушений сотрудников EMS:</td><td><b>0</b></td></tr>
-            <tr><td class="label">Благотворительные акции:</td><td>3</td></tr>
-            <tr><td class="label">Сумма вознаграждений за акции:</td><td><span style="color: green; font-weight: bold;">101.000$</span></td></tr>
-            <tr><td class="label">Общая сумма штрафов:</td><td><span style="color: var(--accent); font-weight: bold;">280.000$</span></td></tr>
-        </table>
-        <p><b>Премирование:</b> Директор Dia Dema (50%), Зам. Директора Dis Morales (40%), Зам. Директора Luigi Cudi (10%)</p>
-
-        <div style="margin-top: 50px; border-top: 1px solid #eee; padding-top: 20px;">
-            <p>Прикрепленные документы:<br>
-            📄 Еженедельный отчет Главы Аппарата Правительства от 05.04.26<br>
-            📄 Еженедельный отчет Инспектора Департамента Здравоохранения от 05.04.26</p>
-            <p style="margin-top: 30px;">Подпись: ____________________ / A. Drovic /</p>
-        </div>
+    <div id="main-section">
+        <div class="report-paper" id="current-report">
+            </div>
     </div>
-</main>
 
-<div class="modal-overlay" id="loginModal">
-    <div class="login-box">
-        <button onclick="toggleModal(false)" style="position:absolute; right:10px; top:10px; border:none; background:none; cursor:pointer;">✕</button>
-        <h4>System Authorization</h4>
-        <input type="email" id="email" placeholder="minister@labor.gov.us">
-        <input type="password" id="password" placeholder="Password">
-        <button class="btn-auth" onclick="handleLogin()">ACCESS SYSTEM</button>
+    <div id="archive-section" style="display:none; margin-top: 30px;">
+        <h2>Архив государственных отчетов</h2>
+        <div id="archive-container"></div>
     </div>
 </div>
 
-<footer>
-    <div class="container">
-        <p>U.S. Department of Labor | 200 Constitution Ave NW, Washington, DC 20210</p>
-        <p>This is a secure government network. Unauthorized access is prohibited.</p>
-    </div>
-</footer>
+<div class="overlay" onclick="closeLogin()"></div>
+<div id="auth-modal">
+    <h3>Авторизация</h3>
+    <input type="email" id="login-email" placeholder="minister@labor.gov.us">
+    <input type="password" id="login-pass" placeholder="Пароль">
+    <button class="btn-save" onclick="doLogin()">Войти</button>
+</div>
 
 <script>
-    // Встроенная база пользователей (для моментальной работы)
-    const systemUsers = {
-        "minister@labor.gov.us": { pass: "Admin2026", role: "Министр", name: "Artur Drovic", canEdit: true },
-        "deputy1@labor.gov.us": { pass: "Dep2026", role: "Заместитель", name: "Miy Li", canEdit: false },
-        "deputy2@labor.gov.us": { pass: "Dep2026", role: "Заместитель", name: "Elmer Moroz", canEdit: false }
-    };
+    // Изначальные данные (База данных в памяти браузера)
+    let reports = JSON.parse(localStorage.getItem('gov_reports')) || [{
+        id: 1,
+        meta: "Экземпляр №1 | Дата формирования: 12.05.2026",
+        period: "05.04.2026 — 12.05.2026",
+        auditMin: `
+            <tr><td class="label">Министр Artur Drovic</td><td><span class="badge">34%</span></td></tr>
+            <tr><td class="label">Зам. Министра Miy Li</td><td><span class="badge">33%</span></td></tr>
+            <tr><td class="label">Зам. Министра Elmer Moroz</td><td><span class="badge">33%</span></td></tr>
+        `,
+        appData: `
+            <tr><td class="label">Глава Аппарата Mops Sergeyevich</td><td><span class="badge">60%</span></td></tr>
+            <tr><td class="label">Зам. Главы Jamess Soprano</td><td><span class="badge">40%</span></td></tr>
+            <tr><td class="label">Выдано лицензий</td><td><b>315</b></td></tr>
+            <tr><td class="label">Принято на стажировку</td><td>47 человек</td></tr>
+        `,
+        zdravData: `
+            <tr><td class="label">Директор Dia Dema</td><td><span class="badge">50%</span></td></tr>
+            <tr><td class="label">Зам. Директора Dis Morales</td><td><span class="badge">40%</span></td></tr>
+            <tr><td class="label">Общая сумма штрафов</td><td><b>280.000$</b></td></tr>
+        `,
+        docs: "Еженедельный отчет Аппарата|https://docs.google.com\nЕженедельный отчет Здравоохранения|https://docs.google.com"
+    }];
 
-    let currentUser = null;
+    let isAdmin = false;
 
-    function toggleModal(show) {
-        document.getElementById('loginModal').style.display = show ? 'flex' : 'none';
+    function renderReport(report) {
+        document.getElementById('meta-container').innerText = report.meta;
+        
+        let docsHtml = report.docs.split('\n').map(line => {
+            let [name, url] = line.split('|');
+            return `<li><a href="${url}" class="doc-link" target="_blank">${name}</a></li>`;
+        }).join('');
+
+        document.getElementById('current-report').innerHTML = `
+            <h2>Еженедельный отчет Министерства Труда</h2>
+            <p style="text-align:center;">Период: <b>${report.period}</b></p>
+            
+            <h3>1. Кадровый состав и Аудит (Министерство)</h3>
+            <table>${report.auditMin}</table>
+
+            <h3>2. Деятельность Аппарата Правительства</h3>
+            <table>${report.appData}</table>
+
+            <h3>3. Департамент Здравоохранения</h3>
+            <table>${report.zdravData}</table>
+
+            <h3 style="border-left-color: var(--accent);">Прикрепленные документы</h3>
+            <ul>${docsHtml}</ul>
+        `;
     }
 
-    function handleLogin() {
-        const email = document.getElementById('email').value.trim();
-        const pass = document.getElementById('password').value.trim();
-        
-        if (systemUsers[email] && systemUsers[email].pass === pass) {
-            currentUser = systemUsers[email];
-            
-            // Настройка панели после успешного входа
-            document.getElementById('system-panel').style.display = 'block';
-            document.getElementById('user-info').innerHTML = `Авторизация: <b>${currentUser.role} ${currentUser.name}</b>.`;
-            document.getElementById('loginBtn').innerText = 'ВЫЙТИ';
-            
-            // Если это Министр, показываем кнопку редактирования
-            if (currentUser.canEdit) {
-                document.getElementById('edit-mode-btn').style.display = 'inline-block';
-            } else {
-                document.getElementById('edit-mode-btn').style.display = 'none';
-            }
+    function showSection(name) {
+        document.getElementById('main-section').style.display = name === 'main' ? 'block' : 'none';
+        document.getElementById('archive-section').style.display = name === 'archive' ? 'block' : 'none';
+        if(name === 'archive') renderArchive();
+    }
 
-            toggleModal(false);
-            alert(`Доступ разрешен. Добро пожаловать, ${currentUser.name}.`);
+    function renderArchive() {
+        const container = document.getElementById('archive-container');
+        container.innerHTML = '';
+        reports.forEach((r, index) => {
+            const item = document.createElement('div');
+            item.className = 'archive-item';
+            item.innerHTML = `<strong>Отчет за период: ${r.period}</strong><br><small>${r.meta}</small>`;
+            item.onclick = () => { renderReport(r); showSection('main'); };
+            container.appendChild(item);
+        });
+    }
+
+    function openLogin() {
+        document.querySelector('.overlay').style.display = 'block';
+        document.getElementById('auth-modal').style.display = 'block';
+    }
+
+    function closeLogin() {
+        document.querySelector('.overlay').style.display = 'none';
+        document.getElementById('auth-modal').style.display = 'none';
+    }
+
+    function doLogin() {
+        const email = document.getElementById('login-email').value;
+        const pass = document.getElementById('login-pass').value;
+        if(email === 'minister@labor.gov.us' && pass === '1234') {
+            isAdmin = true;
+            document.getElementById('editor-section').style.display = 'block';
+            closeLogin();
+            alert('Доступ разрешен, господин Министр!');
         } else {
-            alert('Ошибка доступа: Неверный логин или пароль .gov');
+            alert('Ошибка доступа!');
         }
     }
+
+    function saveNewReport() {
+        const newReport = {
+            id: Date.now(),
+            meta: document.getElementById('edit-meta').value,
+            period: document.getElementById('edit-period').value,
+            auditMin: document.getElementById('edit-audit-min').value,
+            appData: document.getElementById('edit-app').value,
+            zdravData: document.getElementById('edit-zdrav').value,
+            docs: document.getElementById('edit-docs').value
+        };
+        reports.unshift(newReport); // Новый отчет в начало
+        localStorage.setItem('gov_reports', JSON.stringify(reports));
+        renderReport(newReport);
+        alert('Отчет опубликован и сохранен в архив!');
+        location.reload(); // Перегрузим для чистоты
+    }
+
+    // Инициализация при загрузке
+    renderReport(reports[0]);
 </script>
 
 </body>
