@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GOV SYSTEM v5 FINAL</title>
+
+<title>GOV SYSTEM v6 ULTIMATE</title>
 
 <style>
 body{
@@ -18,7 +19,6 @@ background:#111827;
 padding:20px;
 text-align:center;
 font-size:24px;
-font-weight:bold;
 }
 
 .container{
@@ -51,14 +51,30 @@ cursor:pointer;
 
 .hidden{display:none}
 
-.report{
+.public{
+border-left:3px solid #22c55e;
+background:#0a1a0f;
 padding:10px;
-border-left:3px solid #2563eb;
 margin-top:10px;
-background:#0a0f1a;
 }
 
 small{color:#9ca3af}
+
+.tabs{
+display:flex;
+gap:10px;
+margin-bottom:15px;
+}
+
+.tab{
+flex:1;
+padding:10px;
+text-align:center;
+background:#111827;
+cursor:pointer;
+}
+
+.active{background:#2563eb}
 </style>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
@@ -69,12 +85,28 @@ small{color:#9ca3af}
 
 <body>
 
-<header>GOV SYSTEM v5 FINAL</header>
+<header>GOV SYSTEM v6 ULTIMATE</header>
 
 <div class="container">
 
-<!-- LOGIN -->
-<div class="card" id="loginBox">
+<!-- TABS -->
+<div class="tabs">
+<div class="tab active" onclick="showTab('public')">🌐 Публичные отчёты</div>
+<div class="tab" onclick="showTab('admin')">🔐 Админ</div>
+</div>
+
+<!-- PUBLIC -->
+<div id="public">
+
+<h3>📢 Открытые отчёты</h3>
+<div id="publicReports"></div>
+
+</div>
+
+<!-- ADMIN -->
+<div id="admin" class="hidden">
+
+<div class="card">
 
 <h3>Вход</h3>
 
@@ -82,96 +114,145 @@ small{color:#9ca3af}
 <input id="password" type="password" placeholder="Пароль">
 
 <select id="role">
-<option value="viewer">Viewer</option>
-<option value="deputy">Deputy</option>
-<option value="minister">Minister</option>
-<option value="admin">Admin</option>
+<option>viewer</option>
+<option>deputy</option>
+<option>minister</option>
+<option>admin</option>
 </select>
 
 <button onclick="login()">Войти</button>
 
 </div>
 
-<!-- PANEL -->
 <div class="card hidden" id="panel">
 
-<h3>➕ Создать отчет</h3>
+<h3>➕ Создать отчет (ПУБЛИЧНЫЙ)</h3>
 
 <input id="title" placeholder="Название">
 <textarea id="text" placeholder="Текст"></textarea>
 
-<button onclick="addReport()">Добавить</button>
+<button onclick="addReport()">Опубликовать</button>
 
 </div>
 
-<div id="reports"></div>
+<h3>📊 Все отчёты</h3>
+<div id="allReports"></div>
+
+</div>
 
 </div>
 
 <script>
 
-// 🔥 FIREBASE CONFIG (ВСТАВЬ СВОЙ ИЗ FIREBASE)
+// FIREBASE CONFIG (ВСТАВЬ СВОЙ)
 const firebaseConfig = {
-  apiKey: "YOUR_KEY",
-  authDomain: "YOUR_DOMAIN",
-  projectId: "YOUR_ID",
-  storageBucket: "YOUR_BUCKET",
-  messagingSenderId: "YOUR_SENDER",
-  appId: "YOUR_APP"
+ apiKey:"YOUR_KEY",
+ authDomain:"YOUR_DOMAIN",
+ projectId:"YOUR_ID",
+ storageBucket:"YOUR_BUCKET",
+ messagingSenderId:"YOUR_ID",
+ appId:"YOUR_APP"
 };
 
 firebase.initializeApp(firebaseConfig);
 
-const auth = firebase.auth();
-const db = firebase.firestore();
+const auth=firebase.auth();
+const db=firebase.firestore();
+
+// TABS
+function showTab(tab){
+
+document.getElementById("public").classList.add("hidden");
+document.getElementById("admin").classList.add("hidden");
+
+document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+
+if(tab==="public"){
+document.getElementById("public").classList.remove("hidden");
+document.querySelectorAll(".tab")[0].classList.add("active");
+loadPublic();
+}
+
+if(tab==="admin"){
+document.getElementById("admin").classList.remove("hidden");
+document.querySelectorAll(".tab")[1].classList.add("active");
+}
+
+}
 
 // LOGIN
 function login(){
 
-let email=document.getElementById("email").value;
-let pass=document.getElementById("password").value;
-let role=document.getElementById("role").value;
+let e=document.getElementById("email").value;
+let p=document.getElementById("password").value;
+let r=document.getElementById("role").value;
 
-auth.signInWithEmailAndPassword(email,pass)
+auth.signInWithEmailAndPassword(e,p)
 .then(()=>{
-
 document.getElementById("panel").classList.remove("hidden");
-
-log("login: "+role);
-
-loadReports();
-
+loadAll();
+log("login:"+r);
 })
 .catch(()=>alert("Ошибка входа"));
 
 }
 
-// ADD REPORT
+// ADD REPORT (PUBLIC)
 function addReport(){
 
 db.collection("reports").add({
 title:document.getElementById("title").value,
 text:document.getElementById("text").value,
-time:new Date().toISOString()
+time:new Date().toISOString(),
+public:true
 });
 
-log("add_report");
+log("add_public_report");
 
 }
 
-// LOAD REPORTS
-function loadReports(){
+// LOAD PUBLIC
+function loadPublic(){
 
 db.collection("reports").onSnapshot(snap=>{
 
 let html="";
 
 snap.forEach(doc=>{
+let d=doc.data();
 
+if(d.public){
+
+html+=`
+<div class="public">
+<b>${d.title}</b><br>
+${d.text}<br>
+<small>${d.time}</small>
+</div>
+`;
+
+}
+
+});
+
+document.getElementById("publicReports").innerHTML=html;
+
+});
+
+}
+
+// LOAD ALL (ADMIN)
+function loadAll(){
+
+db.collection("reports").onSnapshot(snap=>{
+
+let html="";
+
+snap.forEach(doc=>{
 let d=doc.data();
 
 html+=`
-<div class="report">
+<div class="card">
 <b>${d.title}</b><br>
 ${d.text}<br>
 <small>${d.time}</small>
@@ -180,21 +261,24 @@ ${d.text}<br>
 
 });
 
-document.getElementById("reports").innerHTML=html;
+document.getElementById("allReports").innerHTML=html;
 
 });
 
 }
 
-// LOG SYSTEM
-function log(action){
+// LOG
+function log(a){
 
 db.collection("logs").add({
-action:action,
+action:a,
 time:new Date().toISOString()
 });
 
 }
+
+// AUTO LOAD PUBLIC
+loadPublic();
 
 </script>
 
