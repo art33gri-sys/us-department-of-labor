@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>US Department of Labor</title>
+<title>US Department of Labor - GOV v2</title>
 
 <style>
 body{
@@ -17,18 +17,13 @@ header{
 background:#111827;
 padding:25px;
 text-align:center;
-font-size:28px;
+font-size:26px;
 font-weight:bold;
-}
-
-.sub{
-font-size:14px;
-color:#9ca3af;
 }
 
 nav{
 background:#020617;
-padding:15px;
+padding:12px;
 text-align:center;
 position:sticky;
 top:0;
@@ -36,44 +31,28 @@ top:0;
 
 nav a{
 color:#9ca3af;
-margin:15px;
+margin:12px;
 text-decoration:none;
 }
 
-nav a:hover{
-color:white;
-}
-
 .container{
-max-width:1200px;
+max-width:1100px;
 margin:auto;
 padding:25px;
 }
 
-.grid{
-display:grid;
-grid-template-columns:repeat(4,1fr);
-gap:20px;
-}
-
 .card{
 background:#111827;
-padding:20px;
+padding:18px;
 border-radius:10px;
+margin-bottom:15px;
 border:1px solid #1f2937;
-margin-bottom:20px;
 }
 
-.stat{
-font-size:30px;
-text-align:center;
-font-weight:bold;
-}
-
-input,textarea{
+input,textarea,select{
 width:100%;
 padding:10px;
-margin-top:10px;
+margin-top:8px;
 background:#020617;
 border:1px solid #1f2937;
 color:white;
@@ -87,11 +66,25 @@ border:none;
 color:white;
 cursor:pointer;
 width:100%;
+border-radius:6px;
+}
+
+.report{
+padding:10px;
+border-left:3px solid #2563eb;
+margin-top:10px;
+background:#0a0f1a;
 }
 
 small{color:#9ca3af}
 
 .hidden{display:none}
+
+.grid{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:15px;
+}
 </style>
 
 </head>
@@ -100,78 +93,64 @@ small{color:#9ca3af}
 
 <header>
 US Department of Labor
-<div class="sub">Secretary of Labor Portal</div>
+<div style="font-size:12px;color:#9ca3af">REAL GOV SYSTEM v2</div>
 </header>
 
 <nav>
 <a href="#home">Главная</a>
-<a href="#reports">Отчеты</a>
-<a href="#staff">Состав</a>
+<a href="#reports">Отчёты</a>
 <a href="#admin">Админ</a>
 </nav>
 
-<div class="container" id="home">
+<div class="container">
 
-<div class="grid">
+<!-- HOME -->
+<div id="home" class="grid">
 
-<div class="card"><div class="stat">26</div>Сотрудников</div>
-<div class="card"><div class="stat">315</div>Лицензий</div>
-<div class="card"><div class="stat">40</div>Экзаменов</div>
-<div class="card"><div class="stat">33</div>Лекций</div>
-
-</div>
+<div class="card"><b>26</b><br>Сотрудников</div>
+<div class="card"><b>315</b><br>Лицензий</div>
+<div class="card"><b>40</b><br>Экзаменов</div>
 
 </div>
 
 <!-- REPORTS -->
-<div class="container" id="reports">
+<div id="reports" class="card">
 
-<div class="card">
-<h2>Добавить отчет</h2>
+<h2>📊 Отчёты</h2>
 
-<input id="title" placeholder="Название">
-<textarea id="text" placeholder="Текст отчета"></textarea>
-
-<button onclick="addReport()">Добавить отчет</button>
-
-</div>
-
-<div id="reportList"></div>
-
-</div>
-
-<!-- STAFF -->
-<div class="container" id="staff">
-
-<div class="card">
-<h2>Состав Министерства</h2>
-
-<p>Министр — Artur Drovic</p>
-<p>Заместитель — Miy Li</p>
-<p>Заместитель — Elmer Moroz</p>
-
-</div>
+<div id="list"></div>
 
 </div>
 
 <!-- ADMIN -->
-<div class="container" id="admin">
+<div id="admin" class="card">
 
-<div class="card">
-<h2>Админ вход</h2>
+<h2>🔐 Админ вход</h2>
 
 <input id="login" placeholder="логин">
 <input id="pass" type="password" placeholder="пароль">
 
+<select id="role">
+<option value="viewer">viewer</option>
+<option value="admin">admin</option>
+<option value="minister">minister</option>
+<option value="deputy">deputy</option>
+</select>
+
 <button onclick="login()">Войти</button>
 
+<div id="panel" class="hidden">
+
+<h3>➕ Добавить отчёт</h3>
+
+<input id="title" placeholder="Название">
+<textarea id="text" placeholder="Текст"></textarea>
+
+<button onclick="addReport()">Сохранить</button>
+
+<button onclick="clearAll()" style="background:red">Очистить всё</button>
+
 </div>
-
-<div class="card hidden" id="panel">
-
-<h2>Админ панель</h2>
-
-<p>✔ Доступ открыт</p>
 
 </div>
 
@@ -181,62 +160,76 @@ US Department of Labor
 
 // LOGIN
 function login(){
-
 let l=document.getElementById("login").value;
 let p=document.getElementById("pass").value;
+let r=document.getElementById("role").value;
 
-if(
-(l=="admin" && p=="labor2026") ||
-(l=="minister" && p=="labor2026") ||
-(l=="deputy" && p=="labor2026")
-){
+if(p==="labor2026" && (r==="admin"||r==="minister"||r==="deputy")){
 document.getElementById("panel").classList.remove("hidden");
-alert("Доступ разрешен");
+alert("Доступ открыт: "+r);
 }else{
-alert("Неверный логин");
+alert("Ошибка доступа");
+}
 }
 
-}
-
-// REPORT SYSTEM
+// ADD REPORT
 function addReport(){
 
 let title=document.getElementById("title").value;
 let text=document.getElementById("text").value;
 
-let data=JSON.parse(localStorage.getItem("reports")||"[]");
+let data=JSON.parse(localStorage.getItem("gov_reports")||"[]");
 
-data.push({
-title:title,
-text:text,
-date:new Date().toLocaleDateString()
+data.unshift({
+title,
+text,
+date:new Date().toLocaleString()
 });
 
-localStorage.setItem("reports",JSON.stringify(data));
+localStorage.setItem("gov_reports",JSON.stringify(data));
 
 loadReports();
 
 }
 
+// LOAD REPORTS
 function loadReports(){
 
-let list=document.getElementById("reportList");
-if(!list) return;
-
-let data=JSON.parse(localStorage.getItem("reports")||"[]");
+let list=document.getElementById("list");
+let data=JSON.parse(localStorage.getItem("gov_reports")||"[]");
 
 list.innerHTML="";
 
-data.reverse().forEach(r=>{
+data.forEach((r,i)=>{
+
 list.innerHTML+=`
-<div class="card">
-<h3>${r.title}</h3>
-<p>${r.text}</p>
+<div class="report">
+<b>${r.title}</b><br>
+${r.text}<br>
 <small>${r.date}</small>
+<br>
+<button onclick="del(${i})" style="background:red;margin-top:5px">Удалить</button>
 </div>
 `;
+
 });
 
+}
+
+// DELETE
+function del(i){
+
+let data=JSON.parse(localStorage.getItem("gov_reports")||"[]");
+data.splice(i,1);
+localStorage.setItem("gov_reports",JSON.stringify(data));
+loadReports();
+
+}
+
+// CLEAR ALL
+function clearAll(){
+localStorage.removeItem("gov_reports");
+loadReports();
 }
 
 loadReports();
