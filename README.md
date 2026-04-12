@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>U.S. Department of Labor | Federal Archive</title>
+    <title>U.S. Department of Labor | Management System</title>
     <style>
         :root { --primary: #002e6d; --accent: #cd2026; --gold: #b69156; --bg: #f4f4f4; }
-        body { font-family: 'Times New Roman', serif; margin: 0; background: var(--bg); color: #333; line-height: 1.5; }
+        body { font-family: 'Times New Roman', serif; margin: 0; background: var(--bg); color: #333; }
         
         header { background: var(--primary); color: white; padding: 20px 0; border-bottom: 4px solid var(--accent); text-align: center; }
         .container { max-width: 1000px; margin: 0 auto; padding: 0 20px; }
@@ -15,23 +15,24 @@
         .nav-btn { text-decoration: none; color: white; font-weight: bold; padding: 8px 15px; border: 2px solid var(--gold); border-radius: 4px; font-family: sans-serif; cursor: pointer; font-size: 12px; }
         .nav-btn:hover { background: var(--gold); color: black; }
 
-        .paper { background: white; padding: 60px; margin: 30px auto; box-shadow: 0 0 20px rgba(0,0,0,0.2); border: 1px solid #ccc; }
+        .paper { background: white; padding: 60px; margin: 30px auto; box-shadow: 0 0 20px rgba(0,0,0,0.2); border: 1px solid #ccc; min-height: 400px; }
         h2 { text-align: center; color: var(--primary); border-bottom: 2px solid var(--primary); margin-bottom: 30px; }
         h3 { background: #eee; padding: 10px; border-left: 6px solid var(--primary); color: var(--primary); margin-top: 30px; text-transform: uppercase; font-size: 18px; }
 
         table { width: 100%; border-collapse: collapse; margin: 15px 0; }
         table th, table td { padding: 12px; border: 1px solid #ddd; text-align: left; }
-        table th { background: #f9f9f9; font-weight: bold; }
         .pct { background: var(--primary); color: white; padding: 2px 6px; border-radius: 3px; font-family: sans-serif; font-size: 12px; }
 
-        .admin-section { display: none; background: white; border: 2px solid var(--gold); padding: 30px; margin-top: 20px; border-radius: 8px; font-family: sans-serif; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        input, textarea, select { width: 100%; padding: 10px; margin: 5px 0 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        .btn-save { background: #28a745; color: white; border: none; padding: 15px; width: 100%; font-weight: bold; cursor: pointer; font-size: 16px; }
+        /* ИСПРАВЛЕННЫЙ БЛОК РЕДАКТОРА */
+        .editor-container { background: white; border: 2px solid var(--gold); padding: 30px; margin-top: 20px; border-radius: 8px; font-family: sans-serif; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        input, textarea { width: 100%; padding: 12px; margin: 8px 0 18px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
+        .btn-post { background: #28a745; color: white; border: none; padding: 18px; width: 100%; font-weight: bold; cursor: pointer; font-size: 16px; border-radius: 4px; text-transform: uppercase; }
+        .btn-post:hover { background: #218838; }
 
         .tab { display: none; }
         .active { display: block; }
-        .log-entry { font-family: monospace; font-size: 11px; padding: 4px; border-bottom: 1px solid #ddd; }
+        .archive-item { background: white; padding: 15px; margin-bottom: 10px; border: 1px solid #ddd; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
     </style>
 </head>
 <body>
@@ -44,17 +45,17 @@
 </header>
 
 <nav>
-    <div class="nav-btn" onclick="showTab('main')">ГЛАВНАЯ</div>
-    <div class="nav-btn" onclick="showTab('archive')">АРХИВ</div>
-    <div class="nav-btn" id="n-edit" style="display:none;" onclick="showTab('editor')">СОЗДАТЬ ОТЧЕТ</div>
-    <div class="nav-btn" id="n-users" style="display:none;" onclick="showTab('users')">ПЕРСОНАЛ</div>
-    <div class="nav-btn" id="n-logs" style="display:none;" onclick="showTab('logs')">ЛОГИ</div>
+    <div class="nav-btn" onclick="switchTab('main')">ГЛАВНАЯ</div>
+    <div class="nav-btn" onclick="switchTab('archive')">АРХИВ</div>
+    <div class="nav-btn" id="n-edit" style="display:none;" onclick="switchTab('editor')">СОЗДАТЬ ОТЧЕТ</div>
+    <div class="nav-btn" id="n-users" style="display:none;" onclick="switchTab('users')">ПЕРСОНАЛ</div>
     <div class="nav-btn" style="border-color:#5cb85c" onclick="openLogin()">ВХОД</div>
 </nav>
 
 <div class="container">
     <div id="tab-main" class="tab active">
-        <div class="paper" id="main-content"></div>
+        <div class="paper" id="current-report-content">
+            </div>
     </div>
 
     <div id="tab-archive" class="tab">
@@ -63,205 +64,189 @@
     </div>
 
     <div id="tab-editor" class="tab">
-        <div class="admin-section">
-            <h3>Генерация полного отчета</h3>
-            <div class="grid">
+        <div class="editor-container">
+            <h2>Создание нового еженедельного отчета</h2>
+            <label>Период отчета (напр. 05.04.2026 — 12.04.2026):</label>
+            <input type="text" id="in-period" placeholder="Введите даты...">
+
+            <div class="form-grid">
                 <div>
-                    <label>Период:</label><input type="text" id="p-range" value="05.04.2026 — 12.05.2026">
-                    <h4>Аппарат Правительства (Данные)</h4>
-                    <label>Лицензии (Всего):</label><input type="number" id="p-lic" value="315">
-                    <label>Оружие:</label><input type="number" id="p-gun" value="239">
-                    <label>Охота / Рыбалка:</label><input type="text" id="p-hunt" value="33 / 33">
-                    <label>Собеседования:</label><input type="number" id="p-int" value="6">
-                    <label>Стажировки (Принято):</label><input type="number" id="p-staj" value="47">
-                    <label>Экзамены / Лекции:</label><input type="text" id="p-exam" value="40 / 33">
+                    <h3>Аппарат Правительства</h3>
+                    <label>Лицензий (всего):</label><input type="number" id="in-lic" value="0">
+                    <label>Оружие:</label><input type="number" id="in-gun" value="0">
+                    <label>Собеседования:</label><input type="number" id="in-int" value="0">
+                    <label>Стажировки:</label><input type="number" id="in-staj" value="0">
                 </div>
                 <div>
-                    <h4>Департамент Здравоохранения (Данные)</h4>
-                    <label>Надзорные деятельностей:</label><input type="number" id="p-nadz" value="22">
-                    <label>Мед. проверки:</label><input type="number" id="p-med" value="4">
-                    <label>Собеседования в EMS:</label><input type="number" id="p-ems" value="6">
-                    <label>Нарушения в EMS:</label><input type="number" id="p-warn" value="0">
-                    <label>Благотворительные акции:</label><input type="number" id="p-char" value="3">
-                    <label>Сумма вознаграждений ($):</label><input type="text" id="p-ak-val" value="101.000">
-                    <label>Общая сумма штрафов ($):</label><input type="text" id="p-sh-val" value="280.000">
+                    <h3>Здравоохранение</h3>
+                    <label>Надзорные дела:</label><input type="number" id="in-nadz" value="0">
+                    <label>Мед. проверки:</label><input type="number" id="in-med" value="0">
+                    <label>Штрафы ($):</label><input type="text" id="in-sh" value="0">
+                    <label>Акции:</label><input type="number" id="in-ak" value="0">
                 </div>
             </div>
-            <button class="btn-save" onclick="submitReport()">ОПУБЛИКОВАТЬ ПОЛНЫЙ ОТЧЕТ</button>
+
+            <label>Ссылки на доп. документы (Название|Ссылка, каждая с новой строки):</label>
+            <textarea id="in-links" rows="4" placeholder="Отчет Главы|https://..."></textarea>
+
+            <button class="btn-post" onclick="createNewReport()">Опубликовать в систему</button>
         </div>
     </div>
 
     <div id="tab-users" class="tab">
-        <div class="admin-section">
-            <h3>Управление сотрудниками</h3>
-            <div id="u-list"></div>
-            <hr>
-            <h4>Добавить сотрудника</h4>
-            <input type="text" id="u-new-name" placeholder="Имя Фамилия">
-            <input type="email" id="u-new-email" placeholder="Email">
-            <input type="password" id="u-new-pass" placeholder="Пароль">
-            <button class="btn-save" style="background:var(--primary)" onclick="addUser()">ДОБАВИТЬ</button>
-        </div>
-    </div>
-
-    <div id="tab-logs" class="tab">
-        <div class="admin-section">
-            <h3>Логи действий</h3>
-            <div id="l-container"></div>
+        <div class="editor-container">
+            <h3>Добавить сотрудника</h3>
+            <input type="text" id="u-name" placeholder="Имя Фамилия">
+            <input type="email" id="u-email" placeholder="Email">
+            <input type="password" id="u-pass" placeholder="Пароль">
+            <button class="btn-post" style="background:var(--primary)" onclick="saveUser()">Зарегистрировать</button>
+            <div id="user-list-display" style="margin-top:20px;"></div>
         </div>
     </div>
 </div>
 
-<div id="login-modal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:white; padding:30px; border-top:10px solid var(--primary); z-index:1001; box-shadow:0 0 50px rgba(0,0,0,0.5);">
-    <h3 style="margin-top:0;">Системный вход</h3>
-    <input type="email" id="li-e" placeholder="Email">
-    <input type="password" id="li-p" placeholder="Пароль">
-    <button class="btn-save" onclick="login()">ВОЙТИ</button>
-    <button onclick="closeLogin()" style="border:none; background:none; color:gray; cursor:pointer; width:100%; margin-top:10px;">Отмена</button>
+<div id="login-modal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:white; padding:40px; border-top:10px solid var(--primary); z-index:1001; box-shadow:0 0 100px rgba(0,0,0,0.5); border-radius: 8px;">
+    <h3 style="margin-top:0;">Access Portal</h3>
+    <input type="email" id="l-email" placeholder="Email">
+    <input type="password" id="l-pass" placeholder="Пароль">
+    <button class="btn-post" onclick="doLogin()">Войти</button>
+    <center><button onclick="closeLogin()" style="background:none; border:none; color:gray; cursor:pointer; margin-top:15px;">Отмена</button></center>
 </div>
 
 <script>
-    let storage = JSON.parse(localStorage.getItem('dol_vfinal')) || {
+    // БАЗА ДАННЫХ В ПАМЯТИ
+    let data = JSON.parse(localStorage.getItem('dol_system_v4')) || {
         users: [{email: 'minister@dol.gov', pass: 'Laba2026', name: 'Artur Drovic', role: 'Admin'}],
         reports: [{
-            meta: "Экземпляр №1 | 12.05.2026",
-            period: "05.04.2026 — 12.05.2026",
-            data: { lic: 315, gun: 239, hunt: "33 / 33", int: 6, staj: 47, exam: "40 / 33", nadz: 22, med: 4, ems: 6, warn: 0, char: 3, ak: "101.000", sh: "280.000" }
-        }],
-        logs: []
+            id: 1,
+            meta: "Экземпляр №1 | 12.04.2026",
+            period: "05.04.2026 — 12.04.2026",
+            content: {lic: 315, gun: 239, int: 6, staj: 47, nadz: 22, med: 4, sh: "280.000", ak: 3},
+            links: "Отчет Аппарата|#\nОтчет Здравоохранения|#"
+        }]
     };
 
     let currentUser = null;
 
-    function save() { localStorage.setItem('dol_vfinal', JSON.stringify(storage)); }
+    function saveDB() { localStorage.setItem('dol_system_v4', JSON.stringify(data)); }
 
-    function addLog(m) {
-        storage.logs.unshift(`[${new Date().toLocaleString()}] ${currentUser ? currentUser.name : 'System'}: ${m}`);
-        save();
-    }
-
-    function showTab(t) {
+    function switchTab(t) {
         document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
         document.getElementById('tab-' + t).classList.add('active');
         if(t === 'archive') renderArchive();
-        if(t === 'users') renderUsers();
-        if(t === 'logs') renderLogs();
+        if(t === 'users') renderUserList();
     }
 
-    function renderReport(r) {
-        document.getElementById('main-content').innerHTML = `
-            <div style="font-style:italic; color:gray;">${r.meta}</div>
+    function renderReport(report) {
+        let links = report.links.split('\n').filter(l => l.includes('|')).map(l => {
+            let [name, url] = l.split('|');
+            return `<a href="${url}" target="_blank" style="color:#0056b3; display:block; margin:5px 0; font-weight:bold;">📄 ${name}</a>`;
+        }).join('');
+
+        document.getElementById('current-report-content').innerHTML = `
+            <div style="text-align:right; font-style:italic; color:gray;">${report.meta}</div>
+            <p>Кому: <b>Губернатору Anna Moroz</b><br>От: <b>Министра Artur Drovic</b></p>
             <h2>Еженедельный отчет Министерства Труда</h2>
-            <p style="text-align:center;">Период: <b>${r.period}</b></p>
+            <p style="text-align:center;">Отчетный период: <b>${report.period}</b></p>
             
-            <h3>1. Кадровый аудит и премии (Министерство)</h3>
+            <h3>1. Министерство (Аудит)</h3>
             <table>
-                <tr><th>Сотрудник</th><th>Доля премии</th></tr>
                 <tr><td>Artur Drovic (Министр)</td><td><span class="pct">34%</span></td></tr>
-                <tr><td>Miy Li (Зам. Министра)</td><td><span class="pct">33%</span></td></tr>
-                <tr><td>Elmer Moroz (Зам. Министра)</td><td><span class="pct">33%</span></td></tr>
+                <tr><td>Miy Li (Зам)</td><td><span class="pct">33%</span></td></tr>
+                <tr><td>Elmer Moroz (Зам)</td><td><span class="pct">33%</span></td></tr>
             </table>
 
             <h3>2. Аппарат Правительства</h3>
             <table>
-                <tr><td>Выдано лицензий (Всего)</td><td><b>${r.data.lic}</b></td></tr>
-                <tr><td>Лицензии на оружие</td><td>${r.data.gun}</td></tr>
-                <tr><td>Охота / Рыбалка</td><td>${r.data.hunt}</td></tr>
-                <tr><td>Проведено собеседований</td><td>${r.data.int}</td></tr>
-                <tr><td>Принято на стажировку</td><td>${r.data.staj}</td></tr>
-                <tr><td>Экзамены / Лекции</td><td>${r.data.exam}</td></tr>
-            </table>
-            <h4>Список на премирование (Аппарат)</h4>
-            <table>
-                <tr><td>Mops Sergeyevich (Глава)</td><td><span class="pct">60%</span></td></tr>
-                <tr><td>Jamess Soprano (Зам. Главы)</td><td><span class="pct">40%</span></td></tr>
+                <tr><td>Лицензий выдано</td><td><b>${report.content.lic}</b></td></tr>
+                <tr><td>Из них на оружие</td><td>${report.content.gun}</td></tr>
+                <tr><td>Собеседования / Стажировки</td><td>${report.content.int} / ${report.content.staj}</td></tr>
             </table>
 
             <h3>3. Департамент Здравоохранения</h3>
             <table>
-                <tr><td>Надзорные деятельностей</td><td>${r.data.nadz}</td></tr>
-                <tr><td>Мед. проверки / Собеседования в EMS</td><td>${r.data.med} / ${r.data.ems}</td></tr>
-                <tr><td>Выявлено нарушений сотрудников EMS</td><td><b>${r.data.warn}</b></td></tr>
-                <tr><td>Благотворительные акции</td><td>${r.data.char}</td></tr>
-                <tr><td>Сумма вознаграждений за акции</td><td><b style="color:green;">${r.data.ak}$</b></td></tr>
-                <tr><td>Общая сумма штрафов</td><td><b style="color:red;">${r.data.sh}$</b></td></tr>
+                <tr><td>Надзорные мероприятия</td><td>${report.content.nadz}</td></tr>
+                <tr><td>Мед. проверки</td><td>${report.content.med}</td></tr>
+                <tr><td>Сумма штрафов</td><td><b>${report.content.sh}$</b></td></tr>
+                <tr><td>Проведенные акции</td><td>${report.content.ak}</td></tr>
             </table>
-            <h4>Список на премирование (Здравоохранение)</h4>
-            <table>
-                <tr><td>Dia Dema (Директор)</td><td><span class="pct">50%</span></td></tr>
-                <tr><td>Dis Morales (Зам. Директора)</td><td><span class="pct">40%</span></td></tr>
-                <tr><td>Luigi Cudi (Зам. Директора)</td><td><span class="pct">10%</span></td></tr>
-            </table>
+
+            <h3>Прикрепленные документы</h3>
+            <div style="background:#f8f9fa; padding:15px; border:1px dashed #ccc;">${links || 'Документы отсутствуют'}</div>
         `;
     }
 
-    function submitReport() {
+    function createNewReport() {
         let newR = {
-            meta: `Экземпляр №${storage.reports.length + 1} | ${new Date().toLocaleDateString()}`,
-            period: document.getElementById('p-range').value,
-            data: {
-                lic: document.getElementById('p-lic').value,
-                gun: document.getElementById('p-gun').value,
-                hunt: document.getElementById('p-hunt').value,
-                int: document.getElementById('p-int').value,
-                staj: document.getElementById('p-staj').value,
-                exam: document.getElementById('p-exam').value,
-                nadz: document.getElementById('p-nadz').value,
-                med: document.getElementById('p-med').value,
-                ems: document.getElementById('p-ems').value,
-                warn: document.getElementById('p-warn').value,
-                char: document.getElementById('p-char').value,
-                ak: document.getElementById('p-ak-val').value,
-                sh: document.getElementById('p-sh-val').value
-            }
+            id: Date.now(),
+            meta: `Экземпляр №${data.reports.length + 1} | ${new Date().toLocaleDateString()}`,
+            period: document.getElementById('in-period').value || "Не указан",
+            content: {
+                lic: document.getElementById('in-lic').value,
+                gun: document.getElementById('in-gun').value,
+                int: document.getElementById('in-int').value,
+                staj: document.getElementById('in-staj').value,
+                nadz: document.getElementById('in-nadz').value,
+                med: document.getElementById('in-med').value,
+                sh: document.getElementById('in-sh').value,
+                ak: document.getElementById('in-ak').value
+            },
+            links: document.getElementById('in-links').value
         };
-        storage.reports.unshift(newR);
-        addLog(`Создан отчет за период ${newR.period}`);
-        save();
-        location.reload();
+        data.reports.unshift(newR);
+        saveDB();
+        alert("Опубликовано!");
+        switchTab('main');
+        renderReport(data.reports[0]);
     }
 
     function renderArchive() {
-        document.getElementById('archive-list').innerHTML = storage.reports.map((r, i) => `
-            <div style="background:white; padding:15px; margin-bottom:10px; border:1px solid #ddd; cursor:pointer;" onclick="renderReport(storage.reports[${i}]); showTab('main')">
-                <b>${r.period}</b><br><small>${r.meta}</small>
+        document.getElementById('archive-list').innerHTML = data.reports.map((r, i) => `
+            <div class="archive-item">
+                <div onclick="renderReport(data.reports[${i}]); switchTab('main')" style="flex-grow:1;">
+                    <b>${r.period}</b><br><small>${r.meta}</small>
+                </div>
+                ${currentUser && currentUser.role === 'Admin' ? `<button onclick="deleteReport(${r.id})" style="color:red; border:none; background:none; cursor:pointer;">Удалить</button>` : ''}
             </div>
         `).join('');
     }
 
-    function renderUsers() {
-        document.getElementById('u-list').innerHTML = storage.users.map((u, i) => `
-            <div style="padding:10px; border-bottom:1px solid #eee;">${u.name} (${u.email}) - <b>${u.role}</b></div>
-        `).join('');
+    function deleteReport(id) {
+        if(confirm("Удалить отчет?")) {
+            data.reports = data.reports.filter(x => x.id !== id);
+            saveDB();
+            renderArchive();
+        }
     }
-
-    function renderLogs() { document.getElementById('l-container').innerHTML = storage.logs.map(l => `<div class="log-entry">${l}</div>`).join(''); }
 
     function openLogin() { document.getElementById('login-modal').style.display='block'; }
     function closeLogin() { document.getElementById('login-modal').style.display='none'; }
 
-    function login() {
-        let e = document.getElementById('li-e').value;
-        let p = document.getElementById('li-p').value;
-        let u = storage.users.find(x => x.email === e && x.pass === p);
+    function doLogin() {
+        let e = document.getElementById('l-email').value;
+        let p = document.getElementById('l-pass').value;
+        let u = data.users.find(x => x.email === e && x.pass === p);
         if(u) {
             currentUser = u;
-            document.getElementById('n-edit').style.display='block';
-            if(u.role === 'Admin') { document.getElementById('n-users').style.display='block'; document.getElementById('n-logs').style.display='block'; }
-            addLog("Авторизация");
+            document.getElementById('n-edit').style.display = 'block';
+            if(u.role === 'Admin') document.getElementById('n-users').style.display = 'block';
             closeLogin();
-        } else { alert("Ошибка доступа"); }
+            alert("Добро пожаловать, " + u.name);
+        } else { alert("Ошибка авторизации"); }
     }
 
-    function addUser() {
-        storage.users.push({name: document.getElementById('u-new-name').value, email: document.getElementById('u-new-email').value, pass: document.getElementById('u-new-pass').value, role: 'Editor'});
-        addLog("Добавлен новый пользователь");
-        save();
-        renderUsers();
+    function saveUser() {
+        data.users.push({name: document.getElementById('u-name').value, email: document.getElementById('u-email').value, pass: document.getElementById('u-pass').value, role: 'Editor'});
+        saveDB();
+        renderUserList();
     }
 
-    // Инициализация
-    renderReport(storage.reports[0]);
+    function renderUserList() {
+        document.getElementById('user-list-display').innerHTML = data.users.map(u => `<div>${u.name} (${u.role})</div>`).join('');
+    }
+
+    // Запуск
+    renderReport(data.reports[0]);
 </script>
 </body>
 </html>
