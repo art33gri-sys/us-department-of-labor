@@ -1,104 +1,181 @@
-from datetime import datetime
+import os
+from flask import Flask, render_template_string, request, redirect, url_for, session, flash
+from flask_sqlalchemy import SQLAlchemy
+from werkzeug.security import generate_password_hash, check_password_hash
 
-class Patient:
-    def __init__(self, patient_id, first_name, last_name, ailment):
-        self.id = patient_id
-        self.first_name = first_name
-        self.last_name = last_name
-        self.ailment = ailment
-        self.history = []  # Заметки и история болезни
-        self.prescriptions = [] # Список лекарств
-        self.assigned_doctor = None
+app = Flask(__name__)
+app.secret_key = 'super_secret_hospital_key'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///hospital_v2.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-    def add_note(self, note):
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
-        self.history.append(f"[{timestamp}] {note}")
+db = SQLAlchemy(app)
 
-    def add_prescription(self, medicine):
-        self.prescriptions.append(medicine)
+# --- МОДЕЛИ ДАННЫХ ---
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(50), unique=True, nullable=False)
+    password = db.Column(db.String(200), nullable=False)
+    full_name = db.Column(db.String(100))
 
-    def __str__(self):
-        return f"Пациент: {self.first_name} {self.last_name} | Диагноз: {self.ailment}"
+class Patient(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    first_name = db.Column(db.String(50))
+    last_name = db.Column(db.String(50))
+    ward = db.Column(db.String(10))
+    diagnosis = db.Column(db.String(200))
+    prescriptions = db.Column(db.Text, default="")
+    notes = db.Column(db.Text, default="")
 
+# --- HTML ШАБЛОНЫ (Встроенные) ---
+LOGIN_HTML = """
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Вход в МИС</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-dark d-flex align-items-center" style="height: 100vh;">
+    <div class="container card p-4 shadow" style="max-width: 400px;">
+        <h3 class="text-center mb-4">Вход для персонала</h3>
+        <form method="POST">
+            <input type="text" name="username" class="form-control mb-3" placeholder="Логин (admin)" required>
+            <input type="password" name="password" class="form-control mb-3" placeholder="Пароль (1234)" required>
+            <button class="btn btn-primary w-100">Войти в систему</button>
+        </form>
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}<div class="alert alert-danger mt-3">{{ messages[0] }}</div>{% endif %}
+        {% endwith %}
+    </div>
+</body>
+</html>
+"""
 
-class Doctor:
-    def __init__(self, doctor_id, name, specialization):
-        self.id = doctor_id
-        self.name = name
-        self.specialization = specialization
-        self.patients = []
+DASHBOARD_HTML = """
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Панель управления</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-dark bg-primary shadow-sm mb-4">
+        <div class="container">
+            <span class="navbar-brand">Hospital <b>OS</b> | {{ session['user_name'] }}</span>
+            <a href="{{ url_for('logout') }}" class="btn btn-outline-light btn-sm">Выход</a>
+        </div>
+    </nav>
 
-    def assign_patient(self, patient):
-        self.patients.append(patient)
-        patient.assigned_doctor = self.name
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card shadow-sm p-3 mb-4">
+                    <h5>Прием пациента</h5>
+                    <form action="{{ url_for('add_patient') }}" method="POST">
+                        <div class="mb-2"><input type="text" name="f_name" class="form-control" placeholder="Имя" required></div>
+                        <div class="mb-2"><input type="text" name="l_name" class="form-control" placeholder="Фамилия" required></div>
+                        <div class="mb-2"><input type="text" name="ward" class="form-control" placeholder="№ Палаты" required></div>
+                        <div class="mb-2"><textarea name="diagnosis" class="form-control" placeholder="Диагноз"></textarea></div>
+                        <button class="btn btn-success w-100">Добавить в базу</button>
+                    </form>
+                </div>
+            </div>
 
-    def treat_patient(self, patient, note, medicine=None):
-        if patient in self.patients:
-            patient.add_note(f"Врач {self.name}: {note}")
-            if medicine:
-                patient.add_prescription(medicine)
-        else:
-            print(f"Ошибка: Пациент {patient.last_name} не закреплен за врачом {self.name}")
+            <div class="col-md-8">
+                <div class="card shadow-sm p-3">
+                    <h5>Текущие пациенты</h5>
+                    <table class="table table-hover mt-3">
+                        <thead class="table-secondary">
+                            <tr>
+                                <th>Палата</th>
+                                <th>ФИО</th>
+                                <th>Диагноз</th>
+                                <th>Назначения</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in patients %}
+                            <tr>
+                                <td><span class="badge bg-info text-dark">№ {{ p.ward }}</span></td>
+                                <td><b>{{ p.last_name }}</b> {{ p.first_name }}</td>
+                                <td>{{ p.diagnosis }}</td>
+                                <td>
+                                    <form action="{{ url_for('update_meds', p_id=p.id) }}" method="POST" class="d-flex">
+                                        <input type="text" name="meds" class="form-control form-control-sm" value="{{ p.prescriptions }}" placeholder="Лекарство...">
+                                        <button class="btn btn-sm btn-primary ms-1">OK</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+"""
 
+# --- МАРШРУТЫ (ЛОГИКА) ---
 
-class Ward:
-    def __init__(self, number, capacity):
-        self.number = number
-        self.capacity = capacity
-        self.occupants = []
+@app.route('/', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        user = User.query.filter_by(username=request.form['username']).first()
+        if user and check_password_hash(user.password, request.form['password']):
+            session['user_id'] = user.id
+            session['user_name'] = user.full_name
+            return redirect(url_for('dashboard'))
+        flash('Неверный логин или пароль!')
+    return render_template_string(LOGIN_HTML)
 
-    def add_patient(self, patient):
-        if len(self.occupants) < self.capacity:
-            self.occupants.append(patient)
-            return True
-        return False
+@app.route('/dashboard')
+def dashboard():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    patients = Patient.query.all()
+    return render_template_string(DASHBOARD_HTML, patients=patients)
 
-    def list_patients(self):
-        return [f"{p.first_name} {p.last_name}" for p in self.occupants]
+@app.route('/add_patient', methods=['POST'])
+def add_patient():
+    if 'user_id' in session:
+        new_p = Patient(
+            first_name=request.form['f_name'],
+            last_name=request.form['l_name'],
+            ward=request.form['ward'],
+            diagnosis=request.form['diagnosis']
+        )
+        db.session.add(new_p)
+        db.session.commit()
+    return redirect(url_for('dashboard'))
 
+@app.route('/update_meds/<int:p_id>', methods=['POST'])
+def update_meds(p_id):
+    if 'user_id' in session:
+        patient = Patient.query.get(p_id)
+        patient.prescriptions = request.form['meds']
+        db.session.commit()
+    return redirect(url_for('dashboard'))
 
-class HospitalSystem:
-    def __init__(self):
-        self.wards = {}
-        self.doctors = {}
-        self.all_patients = {}
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('login'))
 
-    def register_doctor(self, doctor):
-        self.doctors[doctor.id] = doctor
+# --- ЗАПУСК ПРИЛОЖЕНИЯ ---
 
-    def admit_patient(self, patient, ward_number):
-        if ward_number in self.wards and self.wards[ward_number].add_patient(patient):
-            self.all_patients[patient.id] = patient
-            print(f"Пациент {patient.last_name} успешно госпитализирован в палату №{ward_number}.")
-        else:
-            print(f"Нет мест в палате №{ward_number} или она не существует.")
-
-# --- ДЕМОНСТРАЦИЯ РАБОТЫ ---
-
-# 1. Инициализация системы
-my_hospital = HospitalSystem()
-my_hospital.wards[101] = Ward(101, capacity=2)
-
-# 2. Создаем персонал
-dr_house = Doctor(1, "Грегори Хаус", "Диагност")
-my_hospital.register_doctor(dr_house)
-
-# 3. Прием пациента
-patient_smith = Patient(1001, "Иван", "Петров", "Волчанка (вероятно)")
-my_hospital.admit_patient(patient_smith, 101)
-
-# 4. Назначение врача и лечение
-dr_house.assign_patient(patient_smith)
-dr_house.treat_patient(patient_smith, "Назначен МРТ головного мозга", "Викодин 5мг")
-dr_house.treat_patient(patient_smith, "Состояние стабильное", "Витамин C")
-
-# 5. Вывод данных
-print("\n--- Отчет по пациенту ---")
-print(patient_smith)
-print(f"Лечащий врач: {patient_smith.assigned_doctor}")
-print("История болезни:")
-for record in patient_smith.history:
-    print(record)
-print(f"Назначенные лекарства: {', '.join(patient_smith.prescriptions)}")
-
-print(f"\nЗаполненность палаты 101: {my_hospital.wards[101].list_patients()}")
+if __name__ == '__main__':
+    with app.app_context():
+        db.create_all()
+        # Создаем администратора по умолчанию
+        if not User.query.filter_by(username='admin').first():
+            admin = User(
+                username='admin',
+                password=generate_password_hash('1234'),
+                full_name='Д-р Александр Иванов'
+            )
+            db.session.add(admin)
+            db.session.commit()
+            print("База создана. Данные для входа: admin / 1234")
+            
+    app.run(debug=True, port=5000)
