@@ -2,7 +2,7 @@
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <title>HospitalOS v11.0 - Full Clinical Edition</title>
+    <title>HospitalOS v11.5 - Full Ward Load</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body { background-color: #f4f6f9; font-family: 'Segoe UI', sans-serif; font-size: 0.82rem; }
@@ -13,7 +13,6 @@
         .badge-common { background-color: #2a9d8f; color: white; padding: 2px 6px; border-radius: 4px; }
         .scroll-area { max-height: 82vh; overflow-y: auto; border-radius: 8px; border: 1px solid #ddd; }
         
-        /* ЕКРАН ПКУ (НАРКОТИКИ) */
         #narcoticOverlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             z-index: 10000; background: rgba(140, 0, 0, 0.98); color: white;
@@ -21,7 +20,6 @@
         }
         .warning-box { border: 8px solid white; display: inline-block; padding: 40px; border-radius: 20px; }
 
-        /* КАРТКА ПАЦІЄНТА */
         .diag-edit { font-size: 1.1rem; font-weight: bold; color: #d90429; border: 2px solid #eee; width: 100%; padding: 8px; border-radius: 6px; }
         .diag-edit:focus { border-color: #d90429; outline: none; background: #fff8f8; }
     </style>
@@ -55,10 +53,6 @@
                 <input type="text" id="wd" class="form-control form-control-sm mb-2" placeholder="Палата №">
                 <textarea id="dg" class="form-control form-control-sm mb-3" rows="3" placeholder="Попередній діагноз..."></textarea>
                 <button onclick="addP()" class="btn btn-primary btn-sm w-100 fw-bold">ГОСПІТАЛІЗУВАТИ</button>
-            </div>
-            
-            <div class="card p-2 sidebar-card bg-light">
-                <small class="text-muted"><b>Довідка:</b> Натисніть на "КАРТА", щоб змінити діагноз або додати записи щоденника.</small>
             </div>
         </div>
 
@@ -126,26 +120,17 @@
                         <option value="Фентаніл|0.1 мг|narc">Фентаніл (амп)</option>
                         <option value="Промедол|20 мг|narc">Промедол (амп)</option>
                         <option value="Сибазон|10 мг|narc">Сибазон (амп)</option>
-                        <option value="Трамадол|100 мг|narc">Трамадол (амп)</option>
                     </optgroup>
-                    <optgroup label="АНТИБІОТИКИ">
+                    <optgroup label="МАНІПУЛЯЦІЇ">
+                        <option value="Клізма|очисна|common">Клізма очисна</option>
+                        <option value="Операція|планова|common">Операція (план)</option>
+                        <option value="Операція|ургентна|common">Операція (терміново)</option>
+                        <option value="Перев'язка|локальна|common">Перев'язка</option>
+                    </optgroup>
+                    <optgroup label="ІНШЕ">
                         <option value="Цефтриаксон|1.0 г|common">Цефтриаксон</option>
-                        <option value="Меропенем|1.0 г|common">Меропенем</option>
-                        <option value="Ванкоміцин|500 мг|common">Ванкоміцин</option>
-                        <option value="Метронідазол|100 мл|common">Метронідазол</option>
-                    </optgroup>
-                    <optgroup label="РЕАНІМАЦІЯ / СЕРЦЕВІ">
-                        <option value="Адреналін|1 мл|common">Адреналін</option>
-                        <option value="Дофамін|200 мг|common">Дофамін</option>
-                        <option value="Аміодарон|150 мг|common">Аміодарон</option>
-                        <option value="Гепарин|5000 ОД|common">Гепарин</option>
-                        <option value="Фуросемід|20 мг|common">Фуросемід</option>
-                    </optgroup>
-                    <optgroup label="ПРОЧЕ">
-                        <option value="Дексаметазон|4 мг|common">Дексаметазон</option>
                         <option value="Анальгін|2.0|common">Анальгін</option>
-                        <option value="Димедрол|1.0|common">Димедрол</option>
-                        <option value="Кеторолак|1.0|common">Кеторолак</option>
+                        <option value="Фуросемід|20 мг|common">Фуросемід</option>
                     </optgroup>
                 </select>
                 <input type="text" id="iN" class="form-control mb-1" placeholder="Назва">
@@ -158,31 +143,27 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    const narcTrigger = ["Морфін", "Фентаніл", "Промедол", "Сибазон", "Трамадол", "Налбуфін"];
-    const surnames = ["Бондаренко", "Мельник", "Шевченко", "Ткаченко", "Коваленко", "Олійник", "Мороз", "Козак", "Павленко", "Кравченко"];
-    const names = ["Олександр", "Дмитро", "Сергій", "Андрій", "Іван", "Марія", "Олена", "Оксана", "Тетяна", "Василь"];
-    const clinicalDiagnoses = [
-        "Гострий панкреатит, набрякова форма",
-        "Шлунково-кишкова кровотеча, активна",
-        "Гостра двобічна пневмонія, тягаий перебіг",
-        "Закрита черепно-мозкова травма, струс мозку",
-        "Інфаркт міокарда передньої стінки лівого шлуночка",
-        "Цукровий діабет II типу, стан декомпенсації",
-        "Ниркова коліка справа, сечокам'яна хвороба",
-        "Гострий апендицит, деструктивна форма",
-        "Хронічна серцева недостатність IIБ ст.",
-        "Гостре порушення мозкового кровообігу (Інсульт)"
+    const narcTrigger = ["Морфін", "Фентаніл", "Промедол", "Сибазон", "Трамадол"];
+    
+    // БАЗА ПАЦІЄНТІВ З ПРИЗНАЧЕННЯМИ ТА ОПЕРАЦІЯМИ
+    let patients = [
+        {fName: "Олександр", lName: "Шевченко", ward: 101, diag: "Гострий апендицит", meds: [{name:"Операція", dose:"ургентна", isN:false}, {name:"Морфін", dose:"10мг", isN:true}], diary: ["Готується до операційної."]},
+        {fName: "Дмитро", lName: "Мельник", ward: 102, diag: "Кишкова непрохідність", meds: [{name:"Клізма", dose:"очисна", isN:false}, {name:"Цефтриаксон", dose:"1г", isN:false}], diary: ["Призначено серію маніпуляцій."]},
+        {fName: "Сергій", lName: "Бондаренко", ward: 103, diag: "Травма гомілки", meds: [{name:"Операція", dose:"остеосинтез", isN:false}, {name:"Промедол", dose:"1мл", isN:true}], diary: ["Післяопераційний період."]},
+        {fName: "Марія", lName: "Коваленко", ward: 104, diag: "Гострий холецистит", meds: [{name:"Фуросемід", dose:"20мг", isN:false}, {name:"Перев'язка", dose:"щоденно", isN:false}], diary: ["Стан стабільний."]},
+        {fName: "Андрій", lName: "Ткаченко", ward: 105, diag: "Виразка шлунку", meds: [{name:"Клізма", dose:"сифонна", isN:false}, {name:"Анальгін", dose:"2мл", isN:false}], diary: ["Дієтичне харчування."]},
+        {fName: "Олена", lName: "Олійник", ward: 106, diag: "Каміння в нирках", meds: [{name:"Морфін", dose:"10мг", isN:true}, {name:"Фуросемід", dose:"40мг", isN:false}], diary: ["Сильний больовий синдром."]},
+        {fName: "Іван", lName: "Кравченко", ward: 107, diag: "Грижа черевної стінки", meds: [{name:"Операція", dose:"планова", isN:false}, {name:"Цефтриаксон", dose:"1г", isN:false}], diary: ["Обстеження завершено."]},
+        {fName: "Василь", lName: "Мороз", ward: 108, diag: "Панкреонекроз", meds: [{name:"Фентаніл", dose:"0.1мг", isN:true}, {name:"Операція", dose:"лапароскопія", isN:false}, {name:"Клізма", dose:"очисна", isN:false}], diary: ["Реанімаційне спостереження."]}
     ];
 
-    let patients = [];
-    // Генерація 35 пацієнтів з реальними діагнозами
-    for(let i=1; i<=35; i++){
+    // Додаємо ще пацієнтів для кількості 35
+    for(let i=1; i<=27; i++){
         patients.push({
-            fName: names[Math.floor(Math.random()*names.length)],
-            lName: surnames[Math.floor(Math.random()*surnames.length)],
-            ward: 100 + i,
-            diag: clinicalDiagnoses[i % clinicalDiagnoses.length],
-            meds: [], diary: ["Хворий госпіталізований за екстреними показаннями."]
+            fName: "Пацієнт", lName: "№"+i, ward: 110 + i, 
+            diag: i%2==0 ? "Післяопераційний стан" : "Підготовка до втручання", 
+            meds: [{name:"Цефтриаксон", dose:"1г", isN:false}, {name:"Перев'язка", dose:"1р/д", isN:false}], 
+            diary: ["Планове лікування."]
         });
     }
 
@@ -197,7 +178,7 @@
                 <td><span class="badge bg-primary p-2">№${p.ward}</span></td>
                 <td><b>${p.lName}</b> ${p.fName}</td>
                 <td><small class="text-danger fw-bold">${p.diag}</small></td>
-                <td>${mStr || '<i class="text-muted">немає</i>'}</td>
+                <td>${mStr}</td>
                 <td class="text-end">
                     <button onclick="openChart(${i})" class="btn btn-sm btn-dark">📄 КАРТА</button>
                     <button onclick="delP(${i})" class="btn btn-sm btn-outline-danger">✕</button>
@@ -254,7 +235,7 @@
 
     function remM(idx) {
         const isN = patients[curIdx].meds[idx].isN;
-        if(confirm(isN ? "⚠️ УВАГА! ВИ ВИДАЛЯЄТЕ НАРКОТИЧНИЙ ПРЕПАРАТ З ЛИСТКА ПРИЗНАЧЕНЬ!" : "Вилучити препарат?")) {
+        if(confirm(isN ? "⚠️ УВАГА! НАРКОТИЧНИЙ ПРЕПАРАТ!" : "Вилучити?")) {
             patients[curIdx].meds.splice(idx,1); updateChartMeds(); render();
         }
     }
@@ -267,7 +248,7 @@
             render(); 
         } 
     }
-    function delP(i) { if(confirm("Виписати хворого зі стаціонару?")) { patients.splice(i,1); render(); } }
+    function delP(i) { if(confirm("Виписати?")) { patients.splice(i,1); render(); } }
 
     setInterval(() => { document.getElementById('timeDisplay').innerText = new Date().toLocaleString('uk-UA'); }, 1000);
     render();
