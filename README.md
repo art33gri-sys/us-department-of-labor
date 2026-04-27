@@ -2,41 +2,40 @@
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <title>HospitalOS v12.0 - Fixed Database</title>
+    <title>HospitalOS v13.0 - Maximum Protocols</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { background-color: #f4f6f9; font-family: 'Segoe UI', sans-serif; font-size: 0.82rem; }
-        .navbar { background-color: #0056b3; color: white; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+        body { background-color: #f4f6f9; font-family: 'Segoe UI', sans-serif; font-size: 0.8rem; }
+        .navbar { background-color: #004085; color: white; border-bottom: 3px solid #ffc107; }
         .sidebar-card { border: none; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); background: white; }
-        .badge-narcotic { background-color: #e63946; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
-        .badge-common { background-color: #2a9d8f; color: white; padding: 2px 6px; border-radius: 4px; }
-        .scroll-area { max-height: 82vh; overflow-y: auto; border-radius: 8px; border: 1px solid #ddd; }
+        .badge-narcotic { background-color: #d90429; color: white; padding: 2px 5px; border-radius: 3px; font-weight: bold; font-size: 0.65rem; text-transform: uppercase; }
+        .badge-common { background-color: #1a7431; color: white; padding: 2px 5px; border-radius: 3px; font-size: 0.65rem; }
+        .badge-proc { background-color: #6f42c1; color: white; padding: 2px 5px; border-radius: 3px; font-size: 0.65rem; }
+        .scroll-area { max-height: 85vh; overflow-y: auto; border: 1px solid #ccc; background: white; }
         
         #narcoticOverlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 10000; background: rgba(140, 0, 0, 0.98); color: white;
-            text-align: center; padding-top: 12%; 
+            z-index: 10000; background: rgba(140, 0, 0, 0.98); color: white; text-align: center; padding-top: 10%; 
         }
-        .warning-box { border: 8px solid white; display: inline-block; padding: 40px; border-radius: 20px; }
-        .diag-edit { font-size: 1.1rem; font-weight: bold; color: #d90429; border: 2px solid #eee; width: 100%; padding: 8px; border-radius: 6px; }
+        .warning-box { border: 10px double white; display: inline-block; padding: 40px; border-radius: 20px; }
+        .diag-edit { font-size: 1.1rem; font-weight: bold; color: #d90429; border: 2px solid #ddd; width: 100%; padding: 8px; }
     </style>
 </head>
 <body>
 
 <div id="narcoticOverlay">
     <div class="warning-box shadow-lg">
-        <h1 style="font-size: 4.5rem; font-weight: 900;">⚠️ ПКУ ⚠️</h1>
-        <h2 id="alertMsg" class="mb-4">КОНТРОЛЬ НАРКОТИКІВ</h2>
-        <button id="confirmBtn" class="btn btn-light btn-lg fw-bold px-5 py-3">ПІДТВЕРДИТИ</button>
-        <button onclick="closeAlert()" class="btn btn-outline-light btn-lg ms-3">СКАСУВАТИ</button>
+        <h1 style="font-size: 5rem;">⚠️ ПКУ ⚠️</h1>
+        <h2 id="alertMsg" class="mb-4">СУВОРИЙ ОБЛІК ПРЕПАРАТІВ</h2>
+        <button id="confirmBtn" class="btn btn-light btn-lg fw-bold px-5 py-3">ПІДТВЕРДИТИ ВИТРАТУ</button>
+        <button onclick="closeAlert()" class="btn btn-outline-light btn-lg ms-3">ВІДМІНА</button>
     </div>
 </div>
 
-<nav class="navbar navbar-dark mb-3">
+<nav class="navbar navbar-dark mb-3 p-2">
     <div class="container-fluid px-4">
-        <span class="navbar-brand">🏥 <b>HospitalOS Pro</b> | Система Стаціонару</span>
-        <span class="badge bg-light text-primary">Пацієнтів: <b id="pCount">0</b></span>
+        <span class="navbar-brand fw-bold">🏥 HospitalOS v13.0 | Журнал призначень та процедур</span>
+        <span id="stats">Завантаження бази...</span>
     </div>
 </nav>
 
@@ -44,27 +43,25 @@
     <div class="row">
         <div class="col-lg-3">
             <div class="card p-3 sidebar-card mb-3">
-                <h6 class="text-primary fw-bold">НОВИЙ ПАЦІЄНТ</h6>
-                <hr>
-                <input type="text" id="ln" class="form-control form-control-sm mb-2" placeholder="Прізвище">
-                <input type="text" id="fn" class="form-control form-control-sm mb-2" placeholder="Ім'я">
-                <input type="text" id="wd" class="form-control form-control-sm mb-2" placeholder="Палата">
-                <textarea id="dg" class="form-control form-control-sm mb-3" rows="2" placeholder="Діагноз"></textarea>
-                <button onclick="addP()" class="btn btn-primary btn-sm w-100 fw-bold">ДОДАТИ</button>
+                <h6 class="text-primary fw-bold">РЕЄСТРАЦІЯ</h6>
+                <input type="text" id="ln" class="form-control form-control-sm mb-2" placeholder="Прізвище пацієнта">
+                <input type="text" id="wd" class="form-control form-control-sm mb-2" placeholder="Палата №">
+                <textarea id="dg" class="form-control form-control-sm mb-3" rows="3" placeholder="Клінічний діагноз..."></textarea>
+                <button onclick="addP()" class="btn btn-primary btn-sm w-100 fw-bold">ГОСПІТАЛІЗУВАТИ</button>
             </div>
         </div>
 
         <div class="col-lg-9">
-            <div class="card p-2 sidebar-card">
+            <div class="card sidebar-card p-2">
                 <div class="table-responsive scroll-area">
-                    <table class="table table-hover align-middle mb-0">
+                    <table class="table table-sm table-hover align-middle mb-0">
                         <thead class="table-dark">
                             <tr>
-                                <th width="70">Палата</th>
-                                <th width="220">Пацієнт</th>
+                                <th width="60">Палата</th>
+                                <th width="180">Прізвище</th>
                                 <th>Діагноз</th>
-                                <th>Призначення</th>
-                                <th class="text-end">Дії</th>
+                                <th>Листок призначень (Ліки та Процедури)</th>
+                                <th width="100" class="text-end">Карта</th>
                             </tr>
                         </thead>
                         <tbody id="pt"></tbody>
@@ -78,24 +75,27 @@
 <div class="modal fade" id="chartModal" tabindex="-1">
     <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title">📄 Електронна карта: <span id="cFull"></span></h5>
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title">📄 МЕДИЧНА КАРТА: <span id="cFull"></span></h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4">
                 <div class="row">
-                    <div class="col-md-5 border-end">
-                        <label class="fw-bold small">ДІАГНОЗ (РЕДАГУВАННЯ):</label>
-                        <textarea id="cDiag" class="diag-edit mb-3" rows="2" onchange="updateDiag()"></textarea>
-                        <label class="fw-bold small">ЛІКИ ТА МАНІПУЛЯЦІЇ:</label>
-                        <div id="cMeds" class="bg-light p-2 rounded border mb-2" style="min-height: 150px;"></div>
-                        <button onclick="openAddMed()" class="btn btn-success btn-sm w-100">+ ДОДАТИ</button>
+                    <div class="col-md-6 border-end">
+                        <label class="fw-bold small">ДІАГНОЗ:</label>
+                        <textarea id="cDiag" class="diag-edit mb-3" onchange="updateDiag()"></textarea>
+                        
+                        <label class="fw-bold small">ПРИЗНАЧЕННЯ ТА ПРОЦЕДУРИ:</label>
+                        <div id="cMeds" class="bg-light p-2 rounded border mb-2" style="min-height: 250px; max-height: 350px; overflow-y: auto;"></div>
+                        <button onclick="openAddMed()" class="btn btn-success btn-sm w-100 fw-bold">+ НОВЕ ПРИЗНАЧЕННЯ</button>
                     </div>
-                    <div class="col-md-7">
-                        <label class="fw-bold small">ЖУРНАЛ:</label>
-                        <div id="cDiary" class="bg-light p-2 mb-2 border rounded" style="height: 200px; overflow-y: auto;"></div>
-                        <textarea id="cNote" class="form-control mb-1" rows="2" placeholder="Запис..."></textarea>
-                        <button onclick="addNote()" class="btn btn-primary btn-sm w-100">ЗБЕРЕГТИ</button>
+                    <div class="col-md-6">
+                        <label class="fw-bold small">ЩОДЕННИК:</label>
+                        <div id="cDiary" class="bg-light p-2 mb-2 border rounded" style="height: 280px; overflow-y: auto;"></div>
+                        <div class="input-group">
+                            <textarea id="cNote" class="form-control" placeholder="Новий запис..."></textarea>
+                            <button onclick="addNote()" class="btn btn-primary">ОК</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -105,19 +105,38 @@
 
 <div class="modal fade" id="medModal" tabindex="-1">
     <div class="modal-dialog modal-sm modal-dialog-centered">
-        <div class="modal-content shadow-lg border-0">
-            <div class="modal-body p-4">
-                <select id="cat" class="form-select mb-2" onchange="fillM()">
-                    <option value="">-- Виберіть --</option>
-                    <option value="Морфін|10 мг|narc">Морфін ⚠️</option>
-                    <option value="Фентаніл|0.1 мг|narc">Фентаніл ⚠️</option>
-                    <option value="Операція|Апендектомія|common">Операція</option>
-                    <option value="Клізма|Очисна|common">Клізма</option>
-                    <option value="Анальгін|2.0|common">Анальгін</option>
+        <div class="modal-content">
+            <div class="modal-body p-3">
+                <label class="small fw-bold">Оберіть зі списку:</label>
+                <select id="cat" class="form-select form-select-sm mb-2" onchange="fillM()">
+                    <option value="">-- КАТАЛОГ --</option>
+                    <optgroup label="НАРКОТИКИ (ПКУ)">
+                        <option value="Морфін|1% 1.0|narc">Морфін</option>
+                        <option value="Фентаніл|0.005% 2.0|narc">Фентаніл</option>
+                        <option value="Промедол|2% 1.0|narc">Промедол</option>
+                        <option value="Трамадол|50мг/мл|narc">Трамадол</option>
+                    </optgroup>
+                    <optgroup label="ПРОЦЕДУРИ">
+                        <option value="Клізма|очисна|proc">Клізма очисна</option>
+                        <option value="Клізма|сифонна|proc">Клізма сифонна</option>
+                        <option value="Промивання шлунку|Cito!|proc">Промивання шлунку</option>
+                        <option value="Встановлення катетера|Фолея|proc">Катетеризація</option>
+                        <option value="Зондування|назогастральне|proc">Зондування</option>
+                        <option value="Перев'язка|гнійна|proc">Перев'язка</option>
+                        <option value="Операція|Лапаротомія|proc">Операція (ургентна)</option>
+                    </optgroup>
+                    <optgroup label="ПРЕПАРАТИ">
+                        <option value="Цефтриаксон|1.0г в/м|common">Цефтриаксон</option>
+                        <option value="Метронідазол|100.0 в/в|common">Метронідазол</option>
+                        <option value="Адреналін|0.1% 1.0|common">Адреналін</option>
+                        <option value="Дофамін|4% 5.0|common">Дофамін</option>
+                        <option value="Фуросемід|1% 2.0|common">Фуросемід</option>
+                        <option value="Гепарин|5000 ОД|common">Гепарин</option>
+                    </optgroup>
                 </select>
-                <input type="text" id="iN" class="form-control mb-1" placeholder="Назва">
-                <input type="text" id="iD" class="form-control mb-3" placeholder="Доза">
-                <button onclick="processMed()" class="btn btn-primary w-100">ПІДТВЕРДИТИ</button>
+                <input type="text" id="iN" class="form-control form-control-sm mb-1" placeholder="Назва">
+                <input type="text" id="iD" class="form-control form-control-sm mb-2" placeholder="Доза/Режим">
+                <button onclick="processMed()" class="btn btn-primary btn-sm w-100">ДОДАТИ</button>
             </div>
         </div>
     </div>
@@ -125,27 +144,39 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    // ФІКСОВАНА БАЗА (35 РІЗНИХ ЛЮДЕЙ)
-    let patients = [
-        {fName:"Іван", lName:"Бондар", ward:101, diag:"Гострий апендицит", meds:[{name:"Операція", dose:"ургентна", isN:false}, {name:"Морфін", dose:"10мг", isN:true}], diary:["Готується до операції."]},
-        {fName:"Марія", lName:"Козак", ward:102, diag:"Панкреатит", meds:[{name:"Клізма", dose:"очисна", isN:false}, {name:"Анальгін", dose:"2мл", isN:false}], diary:["Дієта №5."]},
-        {fName:"Петро", lName:"Шевченко", ward:103, diag:"Перелом стегна", meds:[{name:"Операція", dose:"остеосинтез", isN:false}, {name:"Промедол", dose:"1мл", isN:true}], diary:["Гіпсова пов'язка."]},
-        {fName:"Олена", lName:"Мельник", ward:104, diag:"Холецистит", meds:[{name:"Клізма", dose:"сифонна", isN:false}], diary:["Скарги на нудоту."]},
-        {fName:"Сергій", lName:"Ткач", ward:105, diag:"Виразка", meds:[{name:"Фентаніл", dose:"0.1мг", isN:true}], diary:["Суворий ліжковий режим."]},
-        {fName:"Ганна", lName:"Мороз", ward:106, diag:"Грижа", meds:[{name:"Операція", dose:"планова", isN:false}], diary:["Обстежена."]},
-        {fName:"Оксана", lName:"Поліщук", ward:107, diag:"Пневмонія", meds:[{name:"Цефтриаксон", dose:"1г", isN:false}, {name:"Анальгін", dose:"2.0", isN:false}], diary:["Температура 37.5."]},
-        {fName:"Степан", lName:"Олійник", ward:108, diag:"Ниркова коліка", meds:[{name:"Морфін", dose:"10мг", isN:true}, {name:"Фуросемід", dose:"20мг", isN:false}], diary:["Спазмолітики введені."]}
+    const surnames = ["КОВАЛЕНКО", "МЕЛЬНИК", "БОНДАРЕНКО", "ТКАЧЕНКО", "ШЕВЧЕНКО", "ОЛІЙНИК", "ПОЛІЩУК", "КРАВЧЕНКО", "КОЗАК", "МОРОЗ", "РУДЕНКО", "ЛИСЕНКО", "ПАВЛЕНКО", "САВЧЕНКО", "ДЗЮБА", "ГОНЧАР", "МАРТИНЮК", "КЛИМЕНКО", "ВАКУЛЕНКО", "АНДРІЄНКО"];
+    
+    const diags = [
+        "Гострий перитоніт, сепсис", "Шлункова кровотеча, виразка", "Інфаркт міокарда, ГН", "Політравма, ДТП", "Панкреонекроз", "Кишкова непрохідність", "Гангрена нижньої кінцівки", "Аневризма аорти", "Ниркова недостатність", "Абсцес черевної порожнини"
     ];
 
-    // Додаємо ще пацієнтів до 35 з різними даними
-    const lastNames = ["Коваленко", "Бондаренко", "Кравченко", "Марченко", "Лисенко", "Савченко", "Дзюба", "Руденко", "Клименко"];
-    for(let i=1; i<=27; i++) {
+    const drugs = [
+        {n:"Морфін", d:"10мг", t:"narc"}, {n:"Фентаніл", d:"0.1мг", t:"narc"}, {n:"Клізма", d:"очисна", t:"proc"},
+        {n:"Операція", d:"Cito!", t:"proc"}, {n:"Цефтриаксон", d:"1г", t:"common"}, {n:"Промивання шлунку", d:"терміново", t:"proc"},
+        {n:"Гепарин", d:"5000 ОД", t:"common"}, {n:"Зонд", d:"встановлено", t:"proc"}, {n:"Фуросемід", d:"20мг", t:"common"},
+        {n:"Перев'язка", d:"щоденно", t:"proc"}, {n:"Дофамін", d:"в/в крап", t:"common"}, {n:"Катетер", d:"Фолея", t:"proc"}
+    ];
+
+    let patients = [];
+
+    // ГЕНЕРУЄМО 35 ПАЦІЄНТІВ З ВЕЛИКИМИ СПИСКАМИ
+    for(let i=1; i<=35; i++){
+        let pMeds = [];
+        // Кожному даємо 4-6 випадкових призначень
+        let count = 4 + Math.floor(Math.random()*3);
+        for(let j=0; j<count; j++){
+            let randomDrug = drugs[Math.floor(Math.random()*drugs.length)];
+            if(!pMeds.some(m => m.name === randomDrug.n)) {
+                pMeds.push({name: randomDrug.n, dose: randomDrug.d, type: randomDrug.t});
+            }
+        }
+        
         patients.push({
-            fName: "Пацієнт", lName: lastNames[i%lastNames.length] + " " + (10+i),
-            ward: 110 + i,
-            diag: i%3==0 ? "Забиття грудної клітки" : "Хронічний гастрит",
-            meds: i%5==0 ? [{name:"Клізма", dose:"очисна", isN:false}] : [{name:"Вітаміни", dose:"B12", isN:false}],
-            diary: ["Стан задовільний."]
+            lName: surnames[Math.floor(Math.random()*surnames.length)] + " " + (1000 + i),
+            ward: 200 + i,
+            diag: diags[Math.floor(Math.random()*diags.length)],
+            meds: pMeds,
+            diary: ["Стан важкий. Потребує моніторингу.", "Призначено інтенсивну терапію."]
         });
     }
 
@@ -153,17 +184,21 @@
 
     function render() {
         const b = document.getElementById('pt'); b.innerHTML = "";
-        document.getElementById('pCount').innerText = patients.length;
+        document.getElementById('stats').innerText = `Всього: ${patients.length} | ПКУ: ${patients.reduce((a,b) => a + b.meds.filter(m=>m.type==='narc').length, 0)}`;
+        
         patients.forEach((p, i) => {
-            let mStr = p.meds.map(m => `<span class="${m.isN?'badge-narcotic':'badge-common'} me-1 mb-1 d-inline-block">${m.name}</span>`).join("");
+            let mStr = p.meds.map(m => {
+                let cls = m.type==='narc' ? 'badge-narcotic' : (m.type==='proc' ? 'badge-proc' : 'badge-common');
+                return `<span class="${cls} me-1 mb-1 d-inline-block">${m.name}</span>`;
+            }).join("");
+            
             b.innerHTML += `<tr>
-                <td><span class="badge bg-primary">№${p.ward}</span></td>
-                <td><b>${p.lName}</b> ${p.fName}</td>
+                <td><span class="badge bg-secondary">№${p.ward}</span></td>
+                <td class="fw-bold text-uppercase">${p.lName}</td>
                 <td><small class="text-danger fw-bold">${p.diag}</small></td>
                 <td>${mStr}</td>
                 <td class="text-end">
-                    <button onclick="openChart(${i})" class="btn btn-sm btn-dark">📄 КАРТА</button>
-                    <button onclick="delP(${i})" class="btn btn-sm btn-outline-danger">✕</button>
+                    <button onclick="openChart(${i})" class="btn btn-sm btn-dark">КАРТА</button>
                 </td>
             </tr>`;
         });
@@ -171,7 +206,7 @@
 
     function openChart(i) {
         curIdx = i; const p = patients[i];
-        document.getElementById('cFull').innerText = p.lName + " " + p.fName;
+        document.getElementById('cFull').innerText = p.lName;
         document.getElementById('cDiag').value = p.diag;
         updateChartMeds(); updateDiary();
         new bootstrap.Modal(document.getElementById('chartModal')).show();
@@ -180,16 +215,17 @@
     function updateDiag() { patients[curIdx].diag = document.getElementById('cDiag').value; render(); }
     function updateDiary() { 
         const d = document.getElementById('cDiary'); d.innerHTML = "";
-        patients[curIdx].diary.forEach(e => d.innerHTML += `<div class="p-2 border-bottom bg-white mb-1 small">${e}</div>`);
+        patients[curIdx].diary.forEach(e => d.innerHTML += `<div class="p-2 border-bottom mb-1 bg-white small shadow-sm">${e}</div>`);
     }
     function addNote() { const t = document.getElementById('cNote').value; if(t) { patients[curIdx].diary.push(t); document.getElementById('cNote').value = ""; updateDiary(); } }
 
     function updateChartMeds() {
         const a = document.getElementById('cMeds'); a.innerHTML = "";
         patients[curIdx].meds.forEach((m, idx) => {
+            let color = m.type==='narc' ? 'text-danger fw-bold' : (m.type==='proc' ? 'text-primary' : 'text-success');
             a.innerHTML += `<div class="d-flex justify-content-between p-2 mb-1 bg-white border rounded">
-                <span class="${m.isN?'text-danger fw-bold':''}">${m.name} [${m.dose}]</span>
-                <button class="btn btn-link text-danger btn-sm p-0" onclick="remM(${idx})">видалити</button>
+                <span class="${color}">${m.name} — ${m.dose}</span>
+                <button class="btn btn-link text-danger btn-sm p-0 text-decoration-none" onclick="remM(${idx})">видалити</button>
             </div>`;
         });
     }
@@ -199,35 +235,36 @@
 
     function processMed() {
         const n = document.getElementById('iN').value, d = document.getElementById('iD').value;
-        const isN = ["Морфін", "Фентаніл", "Промедол"].some(nn => n.includes(nn));
-        if(isN) {
-            document.getElementById('alertMsg').innerText = `КОНТРОЛЬ ПКУ: ${n.toUpperCase()}`;
+        const sel = document.getElementById('cat').options[document.getElementById('cat').selectedIndex];
+        const type = sel.parentElement.label === "НАРКОТИКИ (ПКУ)" ? 'narc' : (sel.parentElement.label === "ПРОЦЕДУРИ" ? 'proc' : 'common');
+
+        if(type === 'narc') {
+            document.getElementById('alertMsg').innerText = `ВИТРАТА ПКУ: ${n.toUpperCase()} (${d})`;
             document.getElementById('narcoticOverlay').style.display = 'block';
-            document.getElementById('confirmBtn').onclick = () => { saveM(n,d,true); closeAlert(); };
-        } else { saveM(n,d,false); }
+            document.getElementById('confirmBtn').onclick = () => { saveM(n,d,type); closeAlert(); };
+        } else { saveM(n,d,type); }
     }
 
-    function saveM(n,d,isN) {
+    function saveM(n,d,t) {
         if(n && d) {
-            patients[curIdx].meds.push({name:n, dose:d, isN:isN});
+            patients[curIdx].meds.push({name:n, dose:d, type:t});
             updateChartMeds(); render();
             bootstrap.Modal.getInstance(document.getElementById('medModal')).hide();
         }
     }
 
     function remM(idx) {
-        if(confirm("Видалити запис?")) { patients[curIdx].meds.splice(idx,1); updateChartMeds(); render(); }
+        if(confirm("Скасувати призначення/процедуру?")) { patients[curIdx].meds.splice(idx,1); updateChartMeds(); render(); }
     }
 
     function closeAlert() { document.getElementById('narcoticOverlay').style.display = 'none'; }
     function addP() { 
-        const ln = document.getElementById('ln').value, fn = document.getElementById('fn').value; 
-        if(ln && fn) { 
-            patients.unshift({fName:fn, lName:ln, ward:document.getElementById('wd').value, diag:document.getElementById('dg').value, meds:[], diary:[]}); 
+        const ln = document.getElementById('ln').value; 
+        if(ln) { 
+            patients.unshift({lName:ln, ward:document.getElementById('wd').value, diag:document.getElementById('dg').value, meds:[], diary:[]}); 
             render(); 
         } 
     }
-    function delP(i) { if(confirm("Виписати?")) { patients.splice(i,1); render(); } }
 
     render();
 </script>
